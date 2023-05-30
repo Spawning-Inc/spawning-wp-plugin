@@ -1,0 +1,27 @@
+#spawning-admin-panel {
+    .card {
+        border: 1px solid #707070;
+        background-color: #fff;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        max-width: 100%;
+    }
+
+    .protocolCardHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .checkmark {
+        color: #00ff00;
+    }
+
+    .selections {
+        div {
+            padding: 5px;
+        }
+    }
+}

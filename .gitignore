@@ -1,0 +1,20 @@
+# Dependency directories
+node_modules/
+
+# Build output
+build/
+spawning_ai/LICENSE
+*.zip
+
+# Node.js
+npm-debug.log
+
+# Code coverage
+.nyc/
+
+# Environment variables
+.env
+
+# Editor specific files
+.DS_Store
+.vscode/

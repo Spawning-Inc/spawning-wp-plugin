@@ -1,0 +1,70 @@
+#spawning-admin-panel {
+    .button {
+        margin: 4px;
+        border-color: transparent;
+        box-shadow: 0px 0px 0px 2px #383838;
+        border-radius: 4px;
+        color: #f2f2f2;
+        background-color: $secondary-color;
+        font-size: 16px;
+        font-weight: bold;
+        transition: 0.1s;
+        align-self: start;
+        padding: 4px 24px;
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: default;
+            box-shadow: none;
+            background-color: darken($secondary-color, 15%);
+        }
+    }
+
+    .button:hover {
+        &:enabled {
+            background-color: #fff;
+            box-shadow: 0px 0px 1px 2px $primary-color;
+            cursor: pointer;
+            color: $primary-color;
+
+
+        }
+    }
+
+    .buttonSecondary {
+        margin: 4px;
+        border-color: transparent;
+        box-shadow: 0px 0px 0px 2px #383838;
+        border-radius: 4px;
+        background-color: $background-color;
+        color: $primary-color;
+        font-size: 16px;
+        font-weight: bold;
+        transition: 0.1s;
+        align-self: start;
+        padding: 4px 24px;
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: default;
+            box-shadow: none;
+            background-color: darken($background-color, 15%);
+        }
+    }
+
+    .buttonSecondary:hover {
+        &:enabled {
+            color: #fff;
+            box-shadow: 0px 0px 1px 2px $primary-color;
+            cursor: pointer;
+            background-color: $secondary-color;
+        }
+    }
+
+    .viewLink {
+        color: $accent-color;
+        text-decoration: none;
+        transition: 0.1s;
+        align-self: start;
+    }
+}
