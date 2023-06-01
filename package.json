@@ -3,9 +3,8 @@
         "build": "node-sass sass/main.scss -o spawning_ai/css --output-style compressed && rimraf spawning_ai.zip && node -e 'require(\"fs\").copyFileSync(\"LICENSE.txt\", \"spawning_ai/LICENSE\");require(\"zip-a-folder\").zip(\"./spawning_ai\", \"./spawning_ai.zip\")'"
     },
     "devDependencies": {
-        "node-sass": "^8.0.0",
+        "node-sass": "^9.0.0",
         "rimraf": "^3.0.2",
         "zip-a-folder": "^1.1.3"
     }
 }
-
