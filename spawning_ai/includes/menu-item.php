@@ -36,6 +36,8 @@ function spawning_ai_menu_item() {
     );
 }
 
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 
+
 // This hook allows you to add new menus to the admin area.
 // "spawning_ai_menu_item" function will be called when the admin menu is built.
 add_action("admin_menu", "spawning_ai_menu_item");

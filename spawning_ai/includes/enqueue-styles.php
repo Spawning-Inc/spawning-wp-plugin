@@ -30,6 +30,8 @@ function spawning_ai_enqueue_styles() {
     );
 }
 
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 
+
 // This hook allows you to enqueue your scripts/styles in the admin area only.
 // "spawning_ai_enqueue_styles" function will be called when scripts and styles are enqueued on the admin page.
 add_action("admin_enqueue_scripts", "spawning_ai_enqueue_styles");

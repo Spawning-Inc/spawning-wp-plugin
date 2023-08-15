@@ -23,6 +23,8 @@
     limitations under the License. 
     */
 
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 
+
 require_once 'includes/enqueue-scripts.php';
 require_once 'includes/menu-item.php';
 require_once 'includes/enqueue-dashicons.php';

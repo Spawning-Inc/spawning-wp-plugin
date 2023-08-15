@@ -24,8 +24,8 @@
  */
 function spawning_ai_uninstall()
 {
-    // Define the path of the ai.txt file.
-    $file_path = $_SERVER["DOCUMENT_ROOT"] . "/ai.txt";
+    // Define the path of the ai.txt file using ABSPATH.
+    $file_path = ABSPATH . "ai.txt";
 
     // Check if the ai.txt file exists.
     if (file_exists($file_path)) {

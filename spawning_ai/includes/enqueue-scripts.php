@@ -26,5 +26,8 @@ function spawning_ai_enqueue_scripts() {
     wp_enqueue_script('jquery');
     wp_enqueue_script('spawning-ai-script', plugins_url('../js/scripts.js', __FILE__), array(), '1.0.0', true);
 }
+
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 
+
 add_action('wp_enqueue_scripts', 'spawning_ai_enqueue_scripts');
 add_action('admin_enqueue_scripts', 'spawning_ai_enqueue_scripts');

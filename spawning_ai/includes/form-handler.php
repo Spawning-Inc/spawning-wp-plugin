@@ -20,19 +20,34 @@
  * Handle form submissions from the AI form.
  * This function is hooked into the WordPress AJAX system.
  */
-function handle_ai_form() {
+function spawning_ai_handle_ai_form() {
+
+    // Verify the nonce.
+    $nonce = isset($_POST['_wpnonce']) ? sanitize_text_field($_POST['_wpnonce']) : '';
+    if (!wp_verify_nonce($nonce, 'spawning_handle_ai_form_action')) {
+        echo json_encode(array('message' => 'Nonce verification failed.', 'status' => 'error'));
+        wp_die();
+    }
+
     try {
         // Parse the form data from the serialized string.
-        parse_str($_POST['form'], $form_data); 
+        $sanitized_form = sanitize_text_field($_POST['form']);
+        parse_str($sanitized_form, $form_data); 
 
         // Load the AI options from the JSON file.
         $json_file = plugin_dir_path(dirname(__FILE__)) . "config/ai_txt_options.json";
-        $options = json_decode(file_get_contents($json_file), true);
+        $options_content = sanitize_textarea_field(file_get_contents($json_file));
+        $options = json_decode($options_content, true);
+
+        // Check if the options are valid
+        if (is_null($options) || !is_array($options)) {
+            throw new Exception('Invalid options data.');
+        }
 
         // Begin constructing the file content.
-        $file_content = $options["pre"];
-        $file_content .= $options["userAgent"];
-        $global_setting = $options["disallow"] . "/\n";
+        $file_content = sanitize_textarea_field($options["pre"]);
+        $file_content .= sanitize_textarea_field($options["userAgent"]);
+        $global_setting = sanitize_textarea_field($options["disallow"]) . "/\n";
 
         // Determine whether all options are set.
         $allSet = true;
@@ -82,8 +97,8 @@ function handle_ai_form() {
         $file_content .= $options["post"];
 
         // Write the content to the AI.txt file in the server's root directory.
-        $file_path = $_SERVER["DOCUMENT_ROOT"] . "/ai.txt";
-        $written = file_put_contents($file_path, $file_content);
+        $file_path = ABSPATH . "ai.txt";
+        $written = file_put_contents($file_path, sanitize_textarea_field($file_content));
 
         // Construct a response message based on the form data.
         $message = "";
@@ -99,19 +114,18 @@ function handle_ai_form() {
         );
 
     } catch (Exception $e) {
-        // If an error occurred, prepare an error response.
         $response = array(
-            'message' => $e->getMessage(),
+            'message' => sanitize_text_field($e->getMessage()),
             'status' => 'error'
         );
     }
 
-    // Output the AJAX response.
     echo json_encode($response);
 
-    // Always call wp_die() at the end of an AJAX function to ensure a proper response.
     wp_die(); 
 }
 
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 
+
 // Hook our function into the AJAX system on the wp instance.
-add_action('wp_ajax_handle_ai_form', 'handle_ai_form');
+add_action('wp_ajax_handle_ai_form', 'spawning_ai_handle_ai_form');
