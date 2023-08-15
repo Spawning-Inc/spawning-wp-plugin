@@ -145,7 +145,7 @@ function spawning_ai_page() {
                                 $home_url = home_url("/ai.txt");
                                 $parsed_url = parse_url($home_url);
                                 $home_url_without_http = $parsed_url['host'] . $parsed_url['path'];
-                                echo esc_html(__("View " . $home_url_without_http, "spawning-ai")); 
+                                echo sprintf(esc_html__('View %s', 'spawning-ai'), $home_url_without_http); 
                                 ?> ↗</a>
                     </form>
 
