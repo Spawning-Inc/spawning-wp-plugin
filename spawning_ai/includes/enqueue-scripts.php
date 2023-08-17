@@ -24,6 +24,7 @@
 function spawning_ai_enqueue_scripts() {
     // Assuming your plugin directory is spawning-ai
     wp_enqueue_script('jquery');
+    wp_enqueue_script('jquery-ui-tooltip');
     wp_enqueue_script('spawning-ai-script', plugins_url('../js/scripts.js', __FILE__), array(), '1.0.0', true);
 }
 

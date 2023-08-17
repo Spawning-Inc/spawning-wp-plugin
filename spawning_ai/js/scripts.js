@@ -107,6 +107,48 @@ var UIManager = {
     }
   },
 
+  handleRobotsFormSubmission: function () {
+    // IIFE with jQuery as the argument
+    (function ($) {
+      // Bind an event handler to the 'submit' event of the form with the ID 'robotsForm'
+      $("#robotsForm").on("submit", function (e) {
+        // Prevent the default form submission
+        e.preventDefault();
+
+        // AJAX request to submit the form data
+        $.ajax({
+          type: "POST",
+          url: ajaxurl,
+          data: {
+            action: "handle_robots_form", // This action should correspond to a PHP hook on the server side
+            form: $(this).serialize(),
+            _wpnonce: $("#robots_nonce").val(), // Use the ID "robots_nonce"
+          },
+          success: function (response) {
+            // Handle the successful response here
+            if (response.status === "error") {
+              console.error(response.message);
+            } else {
+              $("#notification")
+                .text("Robots.txt modified successfully!")
+                .css("opacity", "1")
+                .delay(3000)
+                .animate({ opacity: 0 }, 500);
+            }
+          },
+          error: function (jqXHR, textStatus, errorThrown) {
+            console.error(
+              "AJAX Error:",
+              textStatus,
+              errorThrown,
+              jqXHR.responseText
+            );
+          },
+        });
+      });
+    })(jQuery);
+  },
+
   // This is a method of an object that handles the form submission.
   handleFormSubmission: function () {
     // This is an Immediately Invoked Function Expression (IIFE) with jQuery as the argument.
@@ -135,7 +177,7 @@ var UIManager = {
           data: {
             action: "handle_ai_form", // Changed the action to match the PHP hook
             form: $(this).serialize(),
-            _wpnonce: $("#_wpnonce").val(), // Pass the nonce value
+            _wpnonce: $("#ai_nonce").val(), // Use the ID "ai_nonce"
           },
           success: function (response) {
             // The code in this function will execute if the server responds successfully.
@@ -144,14 +186,16 @@ var UIManager = {
             // If the response status indicates an error, log the message to the console.
             if (response.status === "error") {
               console.error(response.message);
+            } else {
+              $(".create-show").hide();
+              $(".create-hidden").show();
+              $("#ai-update-button").prop("disabled", true);
+              $("#notification")
+                .text("Ai.txt updated successfully!")
+                .css("opacity", "1")
+                .delay(3000)
+                .animate({ opacity: 0 }, 500);
             }
-
-            // Hide elements with class 'create-show' and show elements with class 'create-hidden'.
-            $(".create-show").hide();
-            $(".create-hidden").show();
-
-            // Disable the button with ID 'ai-update-button'.
-            $("#ai-update-button").prop("disabled", true);
           },
           error: function (jqXHR, textStatus, errorThrown) {
             console.error(

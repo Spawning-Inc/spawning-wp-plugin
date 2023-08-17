@@ -1,107 +1,122 @@
 #spawning-admin-panel {
-    font-family: sans-serif;
-    background-color: $background-color;
+  font-family: sans-serif;
+  background-color: $background-color;
 
-    h1,
-    h3,
-    p {
-        margin: 0;
-        color: $primary-color;
+  h1,
+  h3,
+  p {
+    margin: 0;
+    color: $primary-color;
+  }
+
+  .wrapper {
+    padding: 40px;
+  }
+
+  .section {
+    margin: 20px 0;
+  }
+
+  .wrapper {
+    margin: 0 auto;
+    max-width: 1000px;
+  }
+
+  .divider {
+    height: 2px;
+    width: auto;
+    background-color: $divider-color;
+    margin: 16px 0;
+  }
+
+  .headerWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .headerBlurb {
+    letter-spacing: 1px;
+    line-height: 20px;
+    font-size: 14px;
+  }
+
+  .titleWrapper {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .logo {
+    height: 30px;
+  }
+
+  .share-links {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: absolute;
+    top: 16px;
+    right: 16px;
+  }
+
+  .share-logo {
+    height: 15px;
+  }
+
+  .download-logo {
+    height: 20px;
+    padding-right: 6px;
+  }
+
+  .consent-div {
+    padding-top: 16px;
+    padding-bottom: 16px;
+    display: flex;
+  }
+
+  .option-span {
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+  }
+
+  .preview-link {
+    float: right;
+    line-height: 38px;
+  }
+
+  .options-table {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .ccLink {
+    padding-left: 16px;
+  }
+
+  .robots-txt-options {
+    padding-top: 16px;
+    padding-bottom: 16px;
+
+    > .checkbox-option {
+      padding-top: 8px;
+      padding-bottom: 8px;
     }
+  }
 
-    .wrapper {
-        padding: 40px;
-    }
-
-    .section {
-        margin: 20px 0;
-    }
-
-    .wrapper {
-        margin: 0 auto;
-        max-width: 1000px;
-    }
-
-    .divider {
-        height: 2px;
-        width: auto;
-        background-color: $divider-color;
-        margin: 16px 0;
-    }
-
-    .headerWrapper {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-    }
-
-    .headerBlurb {
-        letter-spacing: 1px;
-        line-height: 20px;
-        font-size: 14px;
-    }
-
-    .titleWrapper {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-    }
-
-    .logo {
-        height: 30px;
-    }
-
-    .share-links {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        position: absolute;
-        top: 16px;
-        right: 16px;
-    }
-
-    .share-logo {
-        height: 15px;
-
-    }
-
-    .download-logo {
-        height: 20px;
-        padding-right: 6px;
-    }
-
-    .consent-div {
-        padding-top: 16px;
-        padding-bottom: 16px;
-        display: flex;
-    }
-
-    .option-span {
-        font-size: 18px;
-        display: flex;
-        align-items: center;
-    }
-
-    .preview-link {
-        float: right;
-        line-height: 38px;
-    }
-
-    .options-table {
-        padding-top: 8px;
-        padding-bottom: 8px;
-    }
-
-    .ccLink {
-        padding-left: 16px;
-    }
+  .info-icon {
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-left: 5px;
+  }
 }
 
 .footer-links p {
-    float: right;
+  float: right;
 }
 
 .link-row,
 .row-item {
-    display: flex;
+  display: flex;
 }
