@@ -74,7 +74,7 @@
                                }
                            ?>
                                 <tr>
-                                    <td><span><img
+                                    <td><span><img style="vertical-align: middle;"
                                                 src="<?php echo esc_url(plugin_dir_url(dirname(__FILE__)) . "assets/" . $option["icon"]); ?>" />&nbsp;
                                             <?php echo esc_html($option["label"]); ?></span>
                                     </td>
@@ -134,40 +134,6 @@ echo sprintf(esc_html__('View your %s', 'spawning-ai'), "ai.txt");
 ?>
                         ↗</a>
                 </form>
-                <?php
-               // LinkedIn share URL
-               
-               echo '<div class="share-links">';
-               $linkedin_share_url = 'https://www.linkedin.com/sharing/share-offsite/?url=https://site.spawning.ai/spawning-ai-txt';
-               
-               // LinkedIn logo image path
-               $linkedin_logo_path = plugin_dir_url(dirname(__FILE__)) . "assets/linkedin.svg";
-               
-               // Output the LinkedIn share button with the logo
-               echo '<a href="' . esc_url($linkedin_share_url) . '" target="_blank" rel="noopener noreferrer" style="' . esc_attr($ai_txt_enabled ? '' : 'display:none;') . '">';
-               echo '<img src="' . esc_url($linkedin_logo_path) . '" alt="LinkedIn" class="share-logo"/>';
-               echo '</a>';
-               
-               // Get the current site's URL
-               $site_url = esc_url(home_url('/'));
-               
-               // Encode the site URL and path for use in the Twitter share URL
-               $encoded_site_url = rawurlencode($site_url . 'ai.txt');
-               
-               $twitter_msg = rawurlencode('I just installed ai.txt, a tool that sets permissions for what AI miners can and can\'t use on my site. Make one at https://site.spawning.ai/spawning-ai-txt. @spawning_');
-               
-               // Twitter share URL
-               $twitter_share_url = 'https://twitter.com/intent/tweet?url=' . $encoded_site_url . '&text=' . $twitter_msg;
-               
-               // Twitter logo image path
-               $twitter_logo_path = plugin_dir_url(dirname(__FILE__)) . "assets/twitter.svg";
-               
-               // Output the Twitter share button with the logo
-               echo '<a href="' . esc_url($twitter_share_url) . '" target="_blank" rel="noopener noreferrer" style="' . esc_attr($ai_txt_enabled ? '' : 'display:none;') . '">';
-               echo '<img src="' . esc_url($twitter_logo_path) . '" alt="Twitter" class="share-logo"/>';
-               echo '</a>';
-               echo '</div>';
-               ?>
             </div>
             <!-- START: Separate section for CCBot and GPTBot -->
             <div class="section card">
