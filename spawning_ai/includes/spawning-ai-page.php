@@ -62,7 +62,7 @@
                                 <?php
                            // Loop through options and generate checkboxes dynamically
                            foreach ($options["options"] as $option) {
-                               $file_path = $_SERVER["DOCUMENT_ROOT"] . "/ai.txt";
+                               $file_path = sanitize_text_field($_SERVER["DOCUMENT_ROOT"]) . "/ai.txt";
                                $checked = false;
                                $optionValues = explode(",", $option["value"]);
                                $firstOptionValue = trim($optionValues[0]);
@@ -147,7 +147,7 @@ echo sprintf(esc_html__('View your %s', 'spawning-ai'), "ai.txt");
                             <div class="checkbox-option">
                                 <label>
                                     <input type="checkbox" name="block_ccbot"
-                                        <?php checked(get_option('block_ccbot'), 'on'); ?> />
+                                        <?php checked(get_option('spawning_block_ccbot'), 'on'); ?> />
                                     Opt out of Common Crawl's CCBot
                                     <span class="info-icon"
                                         data-tooltip="By checking this, you'll add a directive to the robots.txt file that instructs the Common Crawl bot (CCBot) not to crawl your site.">ⓘ</span>
@@ -156,7 +156,7 @@ echo sprintf(esc_html__('View your %s', 'spawning-ai'), "ai.txt");
                             <div class="checkbox-option">
                                 <label>
                                     <input type="checkbox" name="block_gptbot"
-                                        <?php checked(get_option('block_gptbot'), 'on'); ?> />
+                                        <?php checked(get_option('spawning_block_gptbot'), 'on'); ?> />
                                     Opt out of OpenAI's GPTbot
                                     <span class="info-icon"
                                         data-tooltip="By checking this, you'll add a directive to the robots.txt file that instructs OpenAI's GPTbot not to crawl your site.">ⓘ</span>

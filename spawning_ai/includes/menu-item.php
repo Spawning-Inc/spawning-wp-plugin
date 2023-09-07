@@ -24,8 +24,8 @@
 function spawning_ai_menu_item() {
     // add_menu_page is a WordPress function used to add a top-level menu page.
     add_menu_page(
-        __("Spawning AI", "spawning_ai"), // Page title. This is the title that is displayed in the browser window/tab.
-        __("Spawning AI", "spawning_ai"), // Menu title. This is the title that is displayed in the WordPress admin menu.
+        __("Spawning AI", "spawning-ai"), // Page title. This is the title that is displayed in the browser window/tab.
+        __("Spawning AI", "spawning-ai"), // Menu title. This is the title that is displayed in the WordPress admin menu.
         "manage_options", // Capability required for this menu to be displayed to the user.
         "spawning-ai", // The slug by which the menu page is referred to.
         "spawning_ai_page", // The function that displays the page content for the menu page.

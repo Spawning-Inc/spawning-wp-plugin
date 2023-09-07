@@ -18,7 +18,7 @@
 
 function spawning_ai_handle_ai_form() {
     // Verify nonce
-    $nonce = $_POST['_wpnonce'] ?? '';
+    $nonce = isset($_POST['_wpnonce']) ? sanitize_key($_POST['_wpnonce']) : '';
     if (isset($_POST['robots_update_file']) && !wp_verify_nonce($nonce, 'spawning_handle_robots_form_action')) {
         echo json_encode(['message' => 'Nonce verification failed.', 'status' => 'error']);
         wp_die();
@@ -91,7 +91,7 @@ function spawning_construct_file_content($options, $form_data) {
 
 function spawning_handle_robots_form() {
     // Verify nonce
-    $nonce = $_POST['_wpnonce'] ?? '';
+    $nonce = isset($_POST['_wpnonce']) ? sanitize_key($_POST['_wpnonce']) : '';
     if (!wp_verify_nonce($nonce, 'spawning_handle_robots_form_action')) {
         echo json_encode(['message' => 'Nonce verification failed.', 'status' => 'error']);
         wp_die();
@@ -99,29 +99,37 @@ function spawning_handle_robots_form() {
 
     try {
         // Parse the serialized form data into an array
-        parse_str($_POST['form'], $parsed_form_data);
+        if (isset($_POST['form'])) {
+            parse_str(sanitize_text_field($_POST['form']), $parsed_form_data);
+        } else {
+            $parsed_form_data = array();
+        }
 
-        // Merge the parsed form data with the rest of the $_POST data
-        $form_data = array_merge($_POST, $parsed_form_data);
+        // Define the expected keys
+        $expected_keys = array('block_ccbot', 'block_gptbot');
+
+        // Filter the parsed form data using the expected keys
+        $form_data = array_intersect_key($parsed_form_data, array_flip($expected_keys));
 
         $robots_txt_path = ABSPATH . "robots.txt";
         $robots_content = file_exists($robots_txt_path) ? file_get_contents($robots_txt_path) : "";
 
         // Save the block_ccbot and block_gptbot checkbox states to WordPress options
-        update_option('block_ccbot', isset($form_data['block_ccbot']) ? 'on' : 'off');
-        update_option('block_gptbot', isset($form_data['block_gptbot']) ? 'on' : 'off');
+        update_option('spawning_block_ccbot', isset($form_data['block_ccbot']) ? 'on' : 'off');
+        update_option('spawning_block_gptbot', isset($form_data['block_gptbot']) ? 'on' : 'off');
         
-        if (get_option('block_ccbot') === 'on' && strpos($robots_content, "User-agent: CCBot") === false) {
+        
+        if (get_option('spawning_block_ccbot') === 'on' && strpos($robots_content, "User-agent: CCBot") === false) {
             $robots_content .= "\nUser-agent: CCBot\nDisallow: /\n";
-        } elseif (get_option('block_ccbot') !== 'on') {
+        } elseif (get_option('spawning_block_ccbot') !== 'on') {
             $robots_content = preg_replace("/\n?User-agent: CCBot\nDisallow: \/\n?/", "\n", $robots_content);
             // Remove potential double line breaks
             $robots_content = str_replace("\n\n", "\n", $robots_content);
         }
         
-        if (get_option('block_gptbot') === 'on' && strpos($robots_content, "User-agent: GPTBot") === false) {
+        if (get_option('spawning_block_gptbot') === 'on' && strpos($robots_content, "User-agent: GPTBot") === false) {
             $robots_content .= "\nUser-agent: GPTBot\nDisallow: /\n";
-        } elseif (get_option('block_gptbot') !== 'on') {
+        } elseif (get_option('spawning_block_gptbot') !== 'on') {
             $robots_content = preg_replace("/\n?User-agent: GPTBot\nDisallow: \/\n?/", "\n", $robots_content);
             // Remove potential double line breaks
             $robots_content = str_replace("\n\n", "\n", $robots_content);
@@ -142,11 +150,11 @@ function spawning_handle_robots_form() {
     wp_die();
 }
 
-function modify_robots_txt($output, $public) {
-    if (get_option('block_ccbot') === 'on') {
+function spawning_modify_robots_txt($output, $public) {
+    if (get_option('spawning_block_ccbot') === 'on') {
         $output .= "\nUser-agent: CCBot\nDisallow: /\n";
     }
-    if (get_option('block_gptbot') === 'on') {
+    if (get_option('spawning_block_gptbot') === 'on') {
         $output .= "\nUser-agent: GPTBot\nDisallow: /\n";
     }
     return $output;
@@ -159,6 +167,6 @@ if (!defined('ABSPATH')) {
 
 add_action('wp_ajax_handle_ai_form', 'spawning_ai_handle_ai_form');
 add_action('wp_ajax_handle_robots_form', 'spawning_handle_robots_form');
-add_filter('robots_txt', 'modify_robots_txt', 10, 2);
+add_filter('robots_txt', 'spawning_modify_robots_txt', 10, 2);
 
 ?>
