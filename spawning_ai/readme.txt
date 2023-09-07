@@ -16,7 +16,7 @@ This plugin creates a file named ai.txt with dynamic text based on user-selected
 3. Click the **Add New** button.
 4. Click the **Upload Plugin** button.
 5. Select the **Choose File** prompt. Find the `spawning_ai.zip` file and select it.
-6. Clcik the **Install Now** button.
+6. Click the **Install Now** button.
 7. Once the installation completes, you will see a buttin **Activate Plugin**. 
 8. You should now have a new tab in your WordPress installation labeled **Spawning AI**.
 9. Click this tab to see the ai.txt generation options. The `ai.txt` file will automatically be built and saved to your root path (e.g. `https://www.example.com/ai.txt`).
