@@ -149,6 +149,48 @@ var UIManager = {
     })(jQuery);
   },
 
+  handleKudurruFormSubmission: function () {
+    // IIFE with jQuery as the argument
+    (function ($) {
+      // Bind an event handler to the 'submit' event of the form with the ID 'robotsForm'
+      $("#kudurruForm").on("submit", function (e) {
+        // Prevent the default form submission
+        e.preventDefault();
+
+        // AJAX request to submit the form data
+        $.ajax({
+          type: "POST",
+          url: ajaxurl,
+          data: {
+            action: "handle_kudurru_form", // This action should correspond to a PHP hook on the server side
+            form: $(this).serialize(),
+            _wpnonce: $("#kudurru_nonce").val(), // Use the ID "robots_nonce"
+          },
+          success: function (response) {
+            // Handle the successful response here
+            if (response.status === "error") {
+              console.error(response.message);
+            } else {
+              $("#notification")
+                .text("Kudurru Activated!")
+                .css("opacity", "1")
+                .delay(3000)
+                .animate({ opacity: 0 }, 500);
+            }
+          },
+          error: function (jqXHR, textStatus, errorThrown) {
+            console.error(
+              "AJAX Error:",
+              textStatus,
+              errorThrown,
+              jqXHR.responseText
+            );
+          },
+        });
+      });
+    })(jQuery);
+  },
+
   // This is a method of an object that handles the form submission.
   handleFormSubmission: function () {
     // This is an Immediately Invoked Function Expression (IIFE) with jQuery as the argument.

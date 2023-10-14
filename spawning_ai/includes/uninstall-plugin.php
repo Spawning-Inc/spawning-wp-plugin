@@ -56,4 +56,14 @@ function spawning_ai_uninstall()
         // Save the modified content back to the robots.txt file.
         file_put_contents($robots_file_path, $robots_content);
     }
+
+    $rule = "\n# Begin Image Redirector with Blacklist\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule ^wp-content/uploads/(.*\.(jpg|jpeg|png|gif))$ /index.php?image_redirect_request=$1 [L]\n</IfModule>\n# End Image Redirector with Blacklist\n";
+    $htaccess_file = ABSPATH . '.htaccess';
+    if (file_exists($htaccess_file) && is_writable($htaccess_file) && strpos(file_get_contents($htaccess_file), '# Begin Image Redirector with Blacklist')) {
+        $contents = file_get_contents($htaccess_file);
+        $contents = str_replace($rule, '', $contents);
+        file_put_contents($htaccess_file, $contents);
+    }
+
+    update_option('spawning_kudurru_hooks_active', '0');
 }

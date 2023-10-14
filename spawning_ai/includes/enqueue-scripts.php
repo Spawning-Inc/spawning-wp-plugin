@@ -26,6 +26,8 @@ function spawning_ai_enqueue_scripts() {
     wp_enqueue_script('jquery');
     wp_enqueue_script('jquery-ui-tooltip');
     wp_enqueue_script('spawning-ai-script', plugins_url('../js/scripts.js', __FILE__), array(), '1.0.0', true);
+    wp_enqueue_script('chartjs', 'https://cdn.jsdelivr.net/npm/chart.js');
+    wp_enqueue_script('chartjs-adapter', 'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns');
 }
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 

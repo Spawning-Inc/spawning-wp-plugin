@@ -31,8 +31,6 @@ function spawning_ai_handle_ai_form() {
         $form_data = [];
         parse_str(sanitize_text_field($_POST['form']), $form_data);
 
-    
-
     $json_file = plugin_dir_path(dirname(__FILE__)) . "config/ai_txt_options.json";
     $options = json_decode(sanitize_textarea_field(file_get_contents($json_file)), true);
 
@@ -150,6 +148,123 @@ function spawning_handle_robots_form() {
     wp_die();
 }
 
+function spawning_check_image_request() {
+    if (get_option('spawning_kudurru_hooks_active') !== '1') {
+        return;  // Exit early if the hooks aren't active
+    }
+    if (get_query_var('image_redirect_request')) {
+        spawning_redirect_images_to_api();
+    }
+}
+
+function spawning_get_blacklisted_ips() {
+    // Check if the blacklist is already cached
+    $blacklisted_ips = get_transient('blacklisted_ips_cache');
+
+    // If not, fetch and cache it
+    if (false === $blacklisted_ips) {
+        $response = wp_remote_get('https://api-xb2cbucfja-uc.a.run.app/get_blacklist?data_id=15m', [
+            'headers' => [
+                'accept' => 'application/json',
+            ]
+        ]);
+
+        if (is_wp_error($response)) {
+            error_log(print_r($response, true)); // Log the error for debugging
+            return [];
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+
+        $blacklisted_ips = array_map(function($item) {
+            return $item['ip_query'];
+        }, $data['blacklist_ips']);
+
+        // Cache for 15 minutes
+        set_transient('blacklisted_ips_cache', $blacklisted_ips, 15 * MINUTE_IN_SECONDS);
+    }
+
+    return $blacklisted_ips;
+}
+
+function spawning_image_request_query_vars($vars) {
+    $vars[] = 'image_redirect_request';
+    return $vars;
+}
+
+function spawning_redirect_images_to_api() {
+    if (preg_match('/wp-content\/uploads\/.*\.(jpg|jpeg|png|gif)$/i', $_SERVER['REQUEST_URI'], $matches)) {
+        $blacklisted_ips = ['72.50.202.185', '73.207.252.76', '73.207.252.76'];
+
+        if (in_array($_SERVER['REMOTE_ADDR'], $blacklisted_ips)) {
+            $blocked_requests = get_option('blocked_requests', []);
+            $blocked_request = [
+                'ip' => $_SERVER['REMOTE_ADDR'],
+                'image' => $_SERVER['REQUEST_URI'],
+                'timestamp' => current_time('mysql'),
+                'user_agent' => $_SERVER['HTTP_USER_AGENT'],
+                'referrer' => $_SERVER['HTTP_REFERER']
+            ];
+            $blocked_requests[] = $blocked_request;
+            update_option('blocked_requests', $blocked_requests);
+
+            $api_base_url = 'https://api-xb2cbucfja-uc.a.run.app/intercepted';
+            $domain_name = $_SERVER['SERVER_NAME'];
+            $message = "Blocked request from IP: {$blocked_request['ip']} for image: {$blocked_request['image']} at {$blocked_request['timestamp']}";
+            $api_url = $api_base_url . '?domain_name=' . urlencode($domain_name) . '&message=' . urlencode($message);
+
+            $response = wp_remote_post($api_url, [
+                'headers' => [
+                    'accept' => 'application/json'
+                ]
+            ]);
+
+            $custom_image_data = get_option('custom_redirect_image_data');
+            if ($custom_image_data) {
+                header("Content-Type: image/jpeg");
+                echo base64_decode($custom_image_data);
+                exit;
+            } else {
+                header('Location: https://a-us.storyblok.com/f/1012441/1155x1155/0c9dae5d49/qr-code.png');
+                exit;
+            }
+        } else {
+            $image_path = ABSPATH . $_SERVER['REQUEST_URI'];
+            if (file_exists($image_path)) {
+                $image_info = getimagesize($image_path);
+                header("Content-Type: " . $image_info['mime']);
+                readfile($image_path);
+                exit;
+            } else {
+                header('HTTP/1.0 404 Not Found');
+                exit;
+            }
+        }
+    }
+}
+
+
+function spawning_handle_kudurru_form() {
+    // Verify nonce
+    $nonce = isset($_POST['_wpnonce']) ? sanitize_key($_POST['_wpnonce']) : '';
+    if (!wp_verify_nonce($nonce, 'spawning_handle_kudurru_form_action')) {
+        echo json_encode(['message' => 'Nonce verification failed.', 'status' => 'error']);
+        wp_die();
+    }
+
+    $rule = "\n# Begin Image Redirector with Blacklist\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule ^wp-content/uploads/(.*\.(jpg|jpeg|png|gif))$ /index.php?image_redirect_request=$1 [L]\n</IfModule>\n# End Image Redirector with Blacklist\n";
+    $htaccess_file = ABSPATH . '.htaccess';
+    if (file_exists($htaccess_file) && is_writable($htaccess_file) && !strpos(file_get_contents($htaccess_file), '# Begin Image Redirector with Blacklist')) {
+        file_put_contents($htaccess_file, $rule, FILE_APPEND);
+    }
+
+    update_option('spawning_kudurru_hooks_active', '1');
+
+    echo json_encode($response);
+    wp_die();
+}
+
 function spawning_modify_robots_txt($output, $public) {
     if (get_option('spawning_block_ccbot') === 'on') {
         $output .= "\nUser-agent: CCBot\nDisallow: /\n";
@@ -160,13 +275,23 @@ function spawning_modify_robots_txt($output, $public) {
     return $output;
 }
 
-
 if (!defined('ABSPATH')) {
     exit;
 }
 
 add_action('wp_ajax_handle_ai_form', 'spawning_ai_handle_ai_form');
 add_action('wp_ajax_handle_robots_form', 'spawning_handle_robots_form');
+add_action('wp_ajax_handle_kudurru_form', 'spawning_handle_kudurru_form');
 add_filter('robots_txt', 'spawning_modify_robots_txt', 10, 2);
+
+// This allows us to toggle the filtering hooks on and off
+function spawning_init_kudurru_hooks() {
+    if (get_option('spawning_kudurru_hooks_active') === '1') {
+        add_filter('query_vars', 'spawning_image_request_query_vars');
+        add_action('template_redirect', 'spawning_check_image_request');
+        add_action('init', 'spawning_redirect_images_to_api');
+    }
+}
+add_action('init', 'spawning_init_kudurru_hooks');
 
 ?>
