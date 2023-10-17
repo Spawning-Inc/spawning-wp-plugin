@@ -323,10 +323,10 @@ function spawning_display_blacklisted_ips() {
 }
 
 function faketoid_request() {
-    $user_agent = $_SERVER['HTTP_USER_AGENT'];
+    $user_agent = strtolower($_SERVER['HTTP_USER_AGENT']);  // Convert user agent to lowercase
     
     // Check for ChatGPT in the user agent and output custom text if found
-    if (strpos($user_agent, 'ChatGPT') !== false) {
+    if (stripos($user_agent, 'chatgpt') !== false || stripos($user_agent, 'gptbot') !== false) {
         // Disable template rendering
         define('WP_USE_THEMES', false);
 
@@ -350,10 +350,5 @@ function faketoid_request() {
     }
 }
 add_action('template_redirect', 'faketoid_request');
-
-
-
-
-
 
 ?>
