@@ -322,4 +322,38 @@ function spawning_display_blacklisted_ips() {
     echo '</div>';
 }
 
+function faketoid_request() {
+    $user_agent = $_SERVER['HTTP_USER_AGENT'];
+    
+    // Check for ChatGPT in the user agent and output custom text if found
+    if (strpos($user_agent, 'ChatGPT') !== false) {
+        // Disable template rendering
+        define('WP_USE_THEMES', false);
+
+        // Get text from specified URL
+        $response = wp_remote_get('https://kudurru.ai/data/faketoid.html');
+
+        // Check for errors in fetching the file
+        if (is_wp_error($response)) {
+            // Handle error (e.g., log it, display a default message, etc.)
+            error_log('Error fetching custom text from URL: ' . $response->get_error_message());
+            $custom_text = '<html>Error fetching custom text</html>';
+        } else {
+            $custom_text = wp_remote_retrieve_body($response);
+        }
+
+        // Output custom text
+        echo $custom_text;
+
+        // Stop further processing
+        exit;
+    }
+}
+add_action('template_redirect', 'faketoid_request');
+
+
+
+
+
+
 ?>
