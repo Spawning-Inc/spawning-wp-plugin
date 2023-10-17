@@ -190,6 +190,17 @@ echo sprintf(esc_html__('View your %s', 'spawning-ai'), "ai.txt");
                     echo '<div style="width: 32%;"><h2>Requests Over the Last Week</h2><canvas id="lastWeekRequestsChart"></canvas></div>';
                     echo '</div>'; // End of wrapper div
 
+                    // Link to image that opens in a new window/tab
+                    $current_server = $_SERVER['HTTP_HOST'];
+                    $image_url = "http://34.132.90.61/proxy?url=https://{$current_server}/wp-content/test.jpg";
+
+                    echo '<div class="embedded-image-wrapper">';
+                    echo '<a href="' . $image_url . '" target="_blank" rel="noopener noreferrer">';
+                    echo 'Test poison image';
+                    echo '</a>';
+                    echo '</div>';
+
+
                     // Generate the charts
                     ?>
                     <script>

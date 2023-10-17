@@ -163,7 +163,7 @@ function spawning_get_blacklisted_ips() {
 
     // If not, fetch and cache it
     if (false === $blacklisted_ips) {
-        $response = wp_remote_get('https://api-xb2cbucfja-uc.a.run.app/get_blacklist?data_id=15m', [
+        $response = wp_remote_get('https://api-xb2cbucfja-uc.a.run.app/get_blocklist?data_id=15m', [
             'headers' => [
                 'accept' => 'application/json',
             ]
@@ -194,8 +194,8 @@ function spawning_image_request_query_vars($vars) {
 }
 
 function spawning_redirect_images_to_api() {
-    if (preg_match('/wp-content\/uploads\/.*\.(jpg|jpeg|png|gif)$/i', $_SERVER['REQUEST_URI'], $matches)) {
-        $blacklisted_ips = ['72.50.202.185', '73.207.252.76', '73.207.252.76'];
+    if (preg_match('/.*\.(jpg|jpeg|png|gif)$/i', $_SERVER['REQUEST_URI'], $matches)) {
+        $blacklisted_ips = spawning_get_blacklisted_ips();
 
         if (in_array($_SERVER['REMOTE_ADDR'], $blacklisted_ips)) {
             $blocked_requests = get_option('blocked_requests', []);
@@ -253,13 +253,16 @@ function spawning_handle_kudurru_form() {
         wp_die();
     }
 
-    $rule = "\n# Begin Image Redirector with Blacklist\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule ^wp-content/uploads/(.*\.(jpg|jpeg|png|gif))$ /index.php?image_redirect_request=$1 [L]\n</IfModule>\n# End Image Redirector with Blacklist\n";
+    $rule = "\n# Begin Image Redirector with Blacklist\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule ^wp-content/(.*\.(jpg|jpeg|png|gif))$ /index.php?image_redirect_request=$1 [L]\n</IfModule>\n# End Image Redirector with Blacklist\n";
     $htaccess_file = ABSPATH . '.htaccess';
-    if (file_exists($htaccess_file) && is_writable($htaccess_file) && !strpos(file_get_contents($htaccess_file), '# Begin Image Redirector with Blacklist')) {
-        file_put_contents($htaccess_file, $rule, FILE_APPEND);
+    if (file_exists($htaccess_file) && is_writable($htaccess_file)) {
+        file_put_contents($htaccess_file, $rule);  // Remove FILE_APPEND flag to overwrite the file
     }
 
     update_option('spawning_kudurru_hooks_active', '1');
+
+    // Define a response message to be returned to the client
+    $response = ['message' => 'Rewrite rule has been updated successfully.'];
 
     echo json_encode($response);
     wp_die();
@@ -293,5 +296,30 @@ function spawning_init_kudurru_hooks() {
     }
 }
 add_action('init', 'spawning_init_kudurru_hooks');
+
+// Function to create a page on the admin panel
+function spawning_blacklisted_ips_page() {
+    add_menu_page(
+        'Blacklisted IPs',
+        'Blacklisted IPs',
+        'manage_options',
+        'spawning-blacklisted-ips',
+        'spawning_display_blacklisted_ips'
+    );
+}
+add_action('admin_menu', 'spawning_blacklisted_ips_page');
+
+// Function to display the blacklisted IPs on the created page
+function spawning_display_blacklisted_ips() {
+    $blacklisted_ips = spawning_get_blacklisted_ips();
+    echo '<div class="wrap">';
+    echo '<h1>Blacklisted IPs</h1>';
+    echo '<ul>';
+    foreach ($blacklisted_ips as $ip) {
+        echo '<li>' . esc_html($ip) . '</li>';
+    }
+    echo '</ul>';
+    echo '</div>';
+}
 
 ?>
