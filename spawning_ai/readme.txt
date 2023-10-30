@@ -1,5 +1,5 @@
 === ai.txt ===
-Contributors: phoepner
+Contributors: phoep
 Tags: ML, AI, Training Data
 Requires at least: 5.0
 Tested up to: 6.2
