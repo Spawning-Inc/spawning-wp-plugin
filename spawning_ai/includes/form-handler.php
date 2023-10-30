@@ -165,8 +165,62 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+function spawning_handle_spoofing_form() {
+    // Verify nonce
+    $nonce = isset($_POST['spoofing_nonce']) ? sanitize_key($_POST['spoofing_nonce']) : '';
+    if (!wp_verify_nonce($nonce, 'spawning_handle_spoofing_form_action')) {
+        echo json_encode(['message' => 'Nonce verification failed.', 'status' => 'error']);
+        wp_die();
+    }
+
+    $current_status = get_option('spawning_trick_chat_gpt_enabled', 'off');
+    $new_status = $current_status === 'on' ? 'off' : 'on';
+    update_option('spawning_trick_chat_gpt_enabled', $new_status);
+
+    echo json_encode(['status' => 'success', 'new_status' => $new_status]);
+    wp_die();
+}
+
+function spawning_trick_chatgpt() {
+    if (get_option('spawning_trick_chat_gpt_enabled', 'off') === 'off') {
+        return;
+    }
+
+    $user_agent = strtolower($_SERVER['HTTP_USER_AGENT']);  // Convert user agent to lowercase
+    
+    // Check for ChatGPT in the user agent and output custom text if found
+    if (stripos($user_agent, 'chatgpt') !== false || stripos($user_agent, 'gptbot') !== false) {
+        // Disable template rendering
+        define('WP_USE_THEMES', false);
+        
+        // Load the txt_options.php config file
+        $config_file_path = plugin_dir_path(__FILE__) . '../config/txt_options.php';
+        if (file_exists($config_file_path)) {
+            include_once $config_file_path;
+        }
+        
+        // Check if $txt_config is set and if 'gpt_cloak' key exists in the array
+        if (isset($txt_config) && array_key_exists('gpt_cloak', $txt_config)) {
+            // Use the value of 'gpt_cloak' key as custom text
+            $custom_text = $txt_config['gpt_cloak'];
+        } else {
+            // Handle error (e.g., log it, display a default message, etc.)
+            error_log('Error: Config file not found or gpt_cloak key not set in txt_options.php');
+            $custom_text = '<html>Error fetching custom text</html>';
+        }
+
+        // Output custom text
+        echo $custom_text;
+
+        // Stop further processing
+        exit;
+    }
+}
+
+add_action('template_redirect', 'spawning_trick_chatgpt');
 add_action('wp_ajax_handle_ai_form', 'spawning_ai_handle_ai_form');
 add_action('wp_ajax_handle_robots_form', 'spawning_handle_robots_form');
+add_action('wp_ajax_handle_spoofing_form', 'spawning_handle_spoofing_form');
 add_filter('robots_txt', 'spawning_modify_robots_txt', 10, 2);
 
 ?>

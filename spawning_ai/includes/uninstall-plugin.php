@@ -42,6 +42,7 @@ function spawning_ai_uninstall()
         // Remove the block_ccbot and block_gptbot options
         delete_option('block_ccbot');
         delete_option('block_gptbot');
+        
 
         // Get the contents of the robots.txt file.
         $robots_content = file_get_contents($robots_file_path);
@@ -56,4 +57,6 @@ function spawning_ai_uninstall()
         // Save the modified content back to the robots.txt file.
         file_put_contents($robots_file_path, $robots_content);
     }
+
+    delete_option('spawning_trick_chat_gpt_enabled');
 }

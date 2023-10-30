@@ -149,6 +149,38 @@ var UIManager = {
     })(jQuery);
   },
 
+  handleSpoofingFormSubmission: function () {
+    (function ($) {
+      const spoofingButton = document.getElementById("toggle-spoofing");
+
+      spoofingButton.addEventListener("click", function () {
+        jQuery.ajax({
+          url: ajaxurl,
+          method: "POST",
+          data: {
+            action: "handle_spoofing_form",
+            spoofing_nonce: $("#spoofing_nonce").val(),
+          },
+          success: function (response) {
+            // Parse the response string to a JSON object
+            const parsedResponse = JSON.parse(response);
+            // Update the button text
+            spoofingButton.textContent =
+              parsedResponse.new_status === "on"
+                ? "Disable Spoofing"
+                : "Enable Spoofing";
+
+            $("#notification")
+              .text("Spoofing updated successfully!")
+              .css("opacity", "1")
+              .delay(3000)
+              .animate({ opacity: 0 }, 500);
+          },
+        });
+      });
+    })(jQuery);
+  },
+
   // This is a method of an object that handles the form submission.
   handleFormSubmission: function () {
     // This is an Immediately Invoked Function Expression (IIFE) with jQuery as the argument.

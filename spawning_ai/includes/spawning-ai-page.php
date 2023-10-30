@@ -136,7 +136,21 @@ echo sprintf(esc_html__('View your %s', 'spawning-ai'), "ai.txt");
                 </form>
             </div>
             <!-- START: Separate section for CCBot and GPTBot -->
-            <div class="section card">
+                <div class="section card">
+                <form method="post" id="spoofingForm">
+                    <?php wp_nonce_field('spawning_handle_spoofing_form_action', 'spoofing_nonce'); ?>
+                    <p>
+                        <?php echo esc_html__("Use the button below to toggle Chat GPT Spoofing.", "spawning-ai"); ?>
+                    </p>
+                    <div class="selections">
+                    <button type="button" id="toggle-spoofing" class="buttonSecondary">
+                        <?php echo get_option('spawning_trick_chat_gpt_enabled') === 'on' ? 'Disable Spoofing' : 'Enable Spoofing'; ?>
+                    </button>
+                    </div>
+                </form>
+                </div>
+                <div class="section card">
+
                 <form method="post" id="robotsForm">
                     <?php wp_nonce_field('spawning_handle_robots_form_action', 'robots_nonce'); ?>
                     <p>
@@ -210,7 +224,8 @@ echo sprintf(esc_html__('View your %s', 'spawning-ai'), "ai.txt");
 window.onload = function() {
     UIManager.showAdminPanel();
     UIManager.handleFormSubmission();
-    UIManager.handleRobotsFormSubmission(); // Add this line
+    UIManager.handleRobotsFormSubmission();
+    UIManager.handleSpoofingFormSubmission();
 
 };
 
