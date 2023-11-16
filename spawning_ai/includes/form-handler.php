@@ -217,10 +217,27 @@ function spawning_trick_chatgpt() {
     }
 }
 
+function spawning_handle_kudurru_form() {
+    // Verify nonce
+    $nonce = isset($_POST['kudurru_nonce']) ? sanitize_key($_POST['kudurru_nonce']) : '';
+    if (!wp_verify_nonce($nonce, 'spawning_handle_kudurru_form_action')) {
+        echo json_encode(['message' => 'Nonce verification failed.', 'status' => 'error']);
+        wp_die();
+    }
+
+    $current_status = get_option('spawning_kudurru_enabled', 'off');
+    $new_status = $current_status === 'on' ? 'off' : 'on';
+    update_option('spawning_kudurru_enabled', $new_status);
+
+    echo json_encode(['status' => 'success', 'new_status' => $new_status]);
+    wp_die();
+}
+
 add_action('template_redirect', 'spawning_trick_chatgpt');
 add_action('wp_ajax_handle_ai_form', 'spawning_ai_handle_ai_form');
 add_action('wp_ajax_handle_robots_form', 'spawning_handle_robots_form');
 add_action('wp_ajax_handle_spoofing_form', 'spawning_handle_spoofing_form');
+add_action('wp_ajax_handle_kudurru_form', 'spawning_handle_kudurru_form');
 add_filter('robots_txt', 'spawning_modify_robots_txt', 10, 2);
 
 ?>

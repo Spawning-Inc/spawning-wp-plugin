@@ -181,6 +181,38 @@ var UIManager = {
     })(jQuery);
   },
 
+  handleKudurruFormSubmission: function () {
+    (function ($) {
+      const kudurruButton = document.getElementById("toggle-kudurru");
+
+      kudurruButton.addEventListener("click", function () {
+        jQuery.ajax({
+          url: ajaxurl,
+          method: "POST",
+          data: {
+            action: "handle_kudurru_form",
+            kudurru_nonce: $("#kudurru_nonce").val(),
+          },
+          success: function (response) {
+            // Parse the response string to a JSON object
+            const parsedResponse = JSON.parse(response);
+            // Update the button text
+            kudurruButton.textContent =
+              parsedResponse.new_status === "on"
+                ? "Disable Kudurru"
+                : "Enable Kudurru";
+
+            $("#notification")
+              .text("Kudurru updated successfully!")
+              .css("opacity", "1")
+              .delay(3000)
+              .animate({ opacity: 0 }, 500);
+          },
+        });
+      });
+    })(jQuery);
+  },
+
   // This is a method of an object that handles the form submission.
   handleFormSubmission: function () {
     // This is an Immediately Invoked Function Expression (IIFE) with jQuery as the argument.

@@ -150,6 +150,19 @@ echo sprintf(esc_html__('View your %s', 'spawning-ai'), "ai.txt");
                 </form>
                 </div>
                 <div class="section card">
+                <form method="post" id="kudurruForm">
+                    <?php wp_nonce_field('spawning_handle_kudurru_form_action', 'kudurru_nonce'); ?>
+                    <p>
+                        <?php echo esc_html__("Use the button below to toggle Kudurru.", "spawning-ai"); ?>
+                    </p>
+                    <div class="selections">
+                    <button type="button" id="toggle-kudurru" class="buttonSecondary">
+                        <?php echo get_option('spawning_kudurru_enabled') === 'on' ? 'Disable Kudurru' : 'Enable Kudurru'; ?>
+                    </button>
+                    </div>
+                </form>
+                </div>
+                <div class="section card">
 
                 <form method="post" id="robotsForm">
                     <?php wp_nonce_field('spawning_handle_robots_form_action', 'robots_nonce'); ?>
@@ -226,7 +239,7 @@ window.onload = function() {
     UIManager.handleFormSubmission();
     UIManager.handleRobotsFormSubmission();
     UIManager.handleSpoofingFormSubmission();
-
+    UIManager.handleKudurruFormSubmission();
 };
 
 document.addEventListener("DOMContentLoaded", function() {

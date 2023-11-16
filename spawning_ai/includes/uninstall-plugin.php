@@ -59,4 +59,5 @@ function spawning_ai_uninstall()
     }
 
     delete_option('spawning_trick_chat_gpt_enabled');
+    delete_option('spawning_kudurru_enabled');
 }
