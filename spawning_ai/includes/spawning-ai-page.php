@@ -156,9 +156,17 @@ echo sprintf(esc_html__('View your %s', 'spawning-ai'), "ai.txt");
                         <?php echo esc_html__("Use the button below to toggle Kudurru.", "spawning-ai"); ?>
                     </p>
                     <div class="selections">
-                    <button type="button" id="toggle-kudurru" class="buttonSecondary">
-                        <?php echo get_option('spawning_kudurru_enabled') === 'on' ? 'Disable Kudurru' : 'Enable Kudurru'; ?>
-                    </button>
+                        <button type="button" id="toggle-kudurru" class="buttonSecondary">
+                            <?php echo get_option('spawning_kudurru_enabled') === 'on' ? 'Disable Kudurru' : 'Enable Kudurru'; ?>
+                        </button>
+
+                        <?php if (get_option('spawning_kudurru_enabled') === 'on') : ?>
+                            <div class="api-key-input">
+                                <label for="api-key">Api-Key</label>
+                                <input type="text" id="api-key" name="api_key" />
+                            </div>
+                            <div id="kudurru-stats">Look at these stats</div>
+                        <?php endif; ?>
                     </div>
                 </form>
                 </div>
