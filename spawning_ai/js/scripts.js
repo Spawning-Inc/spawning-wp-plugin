@@ -192,6 +192,7 @@ var UIManager = {
           data: {
             action: "handle_kudurru_form",
             kudurru_nonce: $("#kudurru_nonce").val(),
+            api_key: $("#spawning-kudurru-api-key").val(),
           },
           success: function (response) {
             // Parse the response string to a JSON object
@@ -272,5 +273,53 @@ var UIManager = {
         });
       });
     })(jQuery);
+  },
+  validateApiKey: function () {
+    var validateButton = document.getElementById("validate-api-key-button");
+    var resultElement = document.getElementById("api-key-validation-result");
+
+    validateButton.addEventListener("click", function () {
+      var apiKey = document.getElementById("spawning-kudurru-api-key").value;
+
+      fetch("https://api-xb2cbucfja-uc.a.run.app/validate_access", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer " + apiKey,
+        },
+      })
+        .then((response) => {
+          if (response.status === 200) {
+            resultElement.textContent = "API key is valid";
+          } else {
+            resultElement.textContent =
+              "Unfortunately that key doesn't seem to be working.";
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          resultElement.textContent = "Error occurred";
+        });
+    });
+  },
+  fetchAndDisplayKudurruBlocks: function () {
+    fetch(
+      "https://api-xb2cbucfja-uc.a.run.app/get_intercepted_messages_total",
+      {
+        method: "GET",
+        headers: {
+          accept: "application/json",
+        },
+      }
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        if (data && data.message_count) {
+          document.getElementById("kudurru-blocks-count").textContent =
+            "Total Kudurru Blocks: " + data.message_count;
+        } else {
+          console.error("Data not found in response");
+        }
+      })
+      .catch((error) => console.error("Error fetching Kudurru blocks:", error));
   },
 };

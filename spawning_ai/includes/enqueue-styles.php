@@ -29,6 +29,7 @@ function spawning_ai_enqueue_styles() {
         plugins_url("../css/main.css", __FILE__) // Path to the CSS file. plugins_url function is used to get the correct URL regardless of where the WordPress is installed.
     );
     wp_enqueue_style('jquery-ui-css', plugins_url("../css/smoothness-jquery-ui.css", __FILE__));  // You might want to host this CSS yourself or choose a different theme.
+    wp_enqueue_style('thickbox');
 
 }
 

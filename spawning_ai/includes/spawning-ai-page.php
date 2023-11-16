@@ -159,16 +159,90 @@ echo sprintf(esc_html__('View your %s', 'spawning-ai'), "ai.txt");
                         <button type="button" id="toggle-kudurru" class="buttonSecondary">
                             <?php echo get_option('spawning_kudurru_enabled') === 'on' ? 'Disable Kudurru' : 'Enable Kudurru'; ?>
                         </button>
-
+                        <div id="kudurru-blocks-count"></div>
                         <?php if (get_option('spawning_kudurru_enabled') === 'on') : ?>
+
                             <div class="api-key-input">
-                                <label for="api-key">Api-Key</label>
-                                <input type="text" id="api-key" name="api_key" />
+                                <label for="spawning-kudurru-api-key">Api-Key</label>
+                                <input type="text" id="spawning-kudurru-api-key" name="spawning-kudurru-api-key" value="<?php echo get_option('spawning-kudurru-api-key'); ?>"/>
+                                <button type="button" id="validate-api-key-button">Validate API Key</button>
+                                <p id="api-key-validation-result"></p> <!-- Placeholder for the result message -->
                             </div>
-                            <div id="kudurru-stats">Look at these stats</div>
+
+                            <?php 
+                                // Get the API key from the options
+                                $api_key = get_option('spawning-kudurru-api-key');
+                                
+                                if (!empty($api_key)) {
+                                    $current_server = $_SERVER['HTTP_HOST'];
+                                    $api_url = "https://api-xb2cbucfja-uc.a.run.app/get_intercepted_messages_count?domain={$current_server}";
+
+                                    $response = wp_remote_get($api_url, [
+                                        'headers' => [
+                                            'accept' => 'application/json',
+                                            'Authorization' => 'Bearer ' . $api_key,
+                                        ]
+                                    ]);
+
+                                    if (is_wp_error($response)) {
+                                        echo '<p>Failed to fetch intercepted messages count.</p>';
+                                    } else {
+                                        $body = wp_remote_retrieve_body($response);
+                                        $data = json_decode($body, true);
+
+                                        if (isset($data['message_count'])) {
+                                            echo '<p>Total Intercepted Messages: ' . esc_html($data['message_count']) . '</p>';
+                                        } else {
+                                            echo '<p>No intercepted messages found.</p>';
+                                        }
+                                    }
+                                } else {
+                                    echo '<p>API key not set.</p>';
+                                }
+                                $current_server = $_SERVER['HTTP_HOST'];
+                                $image_url = "http://34.132.90.61/proxy?url=https://{$current_server}/wp-content/test.jpg";
+
+                                echo '<div class="embedded-image-wrapper">';
+                                echo '<a href="' . $image_url . '" target="_blank" rel="noopener noreferrer">';
+                                echo 'Test poison image';
+                                echo '</a>';
+                                echo '</div>';
+                            ?>
+
+                            <!-- Button to open modal -->
+                            <a href="#TB_inline?width=600&height=550&inlineId=blacklistModal" class="thickbox button" id="viewBlacklistButton">View Blocklisted IPs</a>
+
+                            <!-- Modal for displaying blacklisted IPs -->
+                            <div id="blacklistModal" style="display: none;">
+                                <h3>Blacklisted IP Addresses</h3>
+                                <?php
+                                $last_updated = get_transient('blacklist_last_updated');
+                                if ($last_updated) {
+                                    $last_updated_time = new DateTime($last_updated);
+                                    $current_time = new DateTime(current_time('mysql'));
+                                    $interval = $last_updated_time->diff($current_time);
+                            
+                                    echo '<p>Last updated: ' . $interval->format('%a days, %h hours, %i minutes ago') . '</p>';
+                                } else {
+                                    echo '<p>Last update time not available.</p>';
+                                }
+                            ?>
+                            <div id="blacklistContent" class="spawning-grid-container">
+                                <?php
+                                $blacklisted_ips = spawning_get_blacklisted_ips();
+                                if (!empty($blacklisted_ips)) {
+                                    foreach ($blacklisted_ips as $ip) {
+                                        echo '<div class="spawning-grid-item"><a href="https://ipinfo.io/' . esc_attr($ip) . '" target="_blank">' . esc_html($ip) . '</a></div>';
+                                    }
+                                } else {
+                                    echo '<p>No blacklisted IPs found.</p>';
+                                }
+                                ?>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </form>
+
                 </div>
                 <div class="section card">
 
@@ -248,6 +322,9 @@ window.onload = function() {
     UIManager.handleRobotsFormSubmission();
     UIManager.handleSpoofingFormSubmission();
     UIManager.handleKudurruFormSubmission();
+    UIManager.validateApiKey();
+    UIManager.fetchAndDisplayKudurruBlocks();
+
 };
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -284,4 +361,4 @@ jQuery(document).ready(function($) {
 </script>
 <?php
    }
-   ?>
+?>

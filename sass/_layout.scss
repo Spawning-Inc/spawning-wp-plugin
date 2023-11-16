@@ -120,3 +120,18 @@
 .row-item {
   display: flex;
 }
+
+.spawning-grid-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px; /* Adjust the gap between items as needed */
+}
+
+.spawning-grid-item {
+  flex: 1 1 200px; /* Adjust the basis to control the minimum width of each item */
+  border: 1px solid #ddd; /* Optional border for visual separation */
+  padding: 10px;
+  text-align: center; /* Center the text within each grid item */
+  background-color: #f9f9f9; /* Optional background color */
+  border-radius: 4px; /* Optional rounded corners */
+}

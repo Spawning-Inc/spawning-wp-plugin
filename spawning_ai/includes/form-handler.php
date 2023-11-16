@@ -228,6 +228,20 @@ function spawning_handle_kudurru_form() {
     $current_status = get_option('spawning_kudurru_enabled', 'off');
     $new_status = $current_status === 'on' ? 'off' : 'on';
 
+    // Retrieve and sanitize the API key
+    $api_key = isset($_POST['api_key']) ? sanitize_text_field($_POST['api_key']) : '';
+    if (!$api_key) {
+        $json_file = plugin_dir_path(dirname(__FILE__)) . "config/ai_txt_options.json";
+        $options = json_decode(sanitize_textarea_field(file_get_contents($json_file)), true);
+        update_option('spawning-kudurru-api-key', $options['default_api_key']);
+    }
+    else {
+        update_option('spawning-kudurru-api-key', $api_key);
+
+    }
+
+    // Update the API key in the database
+
     $rule = "\n# Begin Image Redirector with Blacklist\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule ^wp-content/(.*\.(jpg|jpeg|png|gif))$ /index.php?image_redirect_request=$1 [L]\n</IfModule>\n# End Image Redirector with Blacklist\n";
     $htaccess_file = ABSPATH . '.htaccess';
     if (file_exists($htaccess_file) && is_writable($htaccess_file)) {
@@ -251,6 +265,13 @@ function spawning_check_image_request() {
 }
 
 function spawning_get_blacklisted_ips() {
+    // Retrieve the Bearer API key from the database
+    $bearer_api_key = get_option('spawning-kudurru-api-key', '');
+    if (!$bearer_api_key) {
+        error_log('No Bearer API key found in the database.');
+        return [];
+    }
+
     // Check if the blacklist is already cached
     $blacklisted_ips = get_transient('blacklisted_ips_cache');
 
@@ -259,6 +280,7 @@ function spawning_get_blacklisted_ips() {
         $response = wp_remote_get('https://api-xb2cbucfja-uc.a.run.app/get_blocklist', [
             'headers' => [
                 'accept' => 'application/json',
+                'Authorization' => 'Bearer ' . $bearer_api_key, // Use the Bearer token from the database
             ]
         ]);
 
@@ -270,16 +292,20 @@ function spawning_get_blacklisted_ips() {
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body, true);
 
-        $blacklisted_ips = array_map(function($item) {
-            return $item['ip_query'];
-        }, $data['blacklist_ips']);
+        // Directly use the blacklist_ips array from the response
+        $blacklisted_ips = $data['blacklist_ips'] ?? []; // Null coalescing operator for safety
 
         // Cache for 15 minutes
         set_transient('blacklisted_ips_cache', $blacklisted_ips, 60 * MINUTE_IN_SECONDS);
+
+        // Set the current timestamp as the last updated time
+        $current_timestamp = current_time('mysql'); // Get the current time in MySQL format
+        set_transient('blacklist_last_updated', $current_timestamp, 60 * MINUTE_IN_SECONDS);
     }
 
     return $blacklisted_ips;
 }
+
 
 function spawning_image_request_query_vars($vars) {
     $vars[] = 'image_redirect_request';

@@ -59,5 +59,30 @@ function spawning_ai_uninstall()
     }
 
     delete_option('spawning_trick_chat_gpt_enabled');
+
+    $rule = "\n# Begin Image Redirector with Blacklist\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule ^wp-content/(.*\.(jpg|jpeg|png|gif))$ /index.php?image_redirect_request=$1 [L]\n</IfModule>\n# End Image Redirector with Blacklist\n";
+    $htaccess_file = ABSPATH . '.htaccess';
+    if (file_exists($htaccess_file) && is_writable($htaccess_file) && strpos(file_get_contents($htaccess_file), '# Begin Image Redirector with Blacklist')) {
+        $contents = file_get_contents($htaccess_file);
+        $contents = str_replace($rule, '', $contents);
+        file_put_contents($htaccess_file, $contents);
+    }
+ 
+    update_option('spawning_kudurru_enabled', 'off');
+
     delete_option('spawning_kudurru_enabled');
+    delete_option('spawning-kudurru-api-key');
+ 
+    // Delete blacklisted_ips_cache transient
+    delete_transient('blacklisted_ips_cache');
+    delete_transient('blacklist_last_updated');
+
+    
+ 
+    // Delete blocked_requests option
+    delete_option('blocked_requests');
+ 
+    // Remove custom_redirect_image_data option
+    delete_option('custom_redirect_image_data');
+
 }
