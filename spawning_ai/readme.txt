@@ -1,5 +1,5 @@
 === ai.txt ===
-Contributors: phoepner
+Contributors: phoep
 Tags: ML, AI, Training Data
 Requires at least: 5.0
 Tested up to: 6.2
@@ -41,3 +41,7 @@ By using the Service, you signify your agreement to these Terms of Service. If y
 == Changelog ==
 = 1.0 =
 * Initial release.
+
+== Changelog ==
+= 1.1 =
+* Removing unecessary text.

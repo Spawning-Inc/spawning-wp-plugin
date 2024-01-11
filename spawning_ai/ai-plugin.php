@@ -2,7 +2,7 @@
 /*
    Plugin Name: Spawning AI
    Description: This plugin creates a file named ai.txt with dynamic text based on user-selected checkboxes. The ai.txt file is deleted when the plugin is uninstalled. The plugin also allows for users to modify their robot.txt files to exclude the most common ML dataset crawlers.
-   Version: 1.0
+   Version: 1.2
    Author URI: https://spawning.ai
    Author: Spawning AI
    */

@@ -31,6 +31,8 @@ function spawning_ai_handle_ai_form() {
         $form_data = [];
         parse_str(sanitize_text_field($_POST['form']), $form_data);
 
+    
+
     $json_file = plugin_dir_path(dirname(__FILE__)) . "config/ai_txt_options.json";
     $options = json_decode(sanitize_textarea_field(file_get_contents($json_file)), true);
 
@@ -148,24 +150,146 @@ function spawning_handle_robots_form() {
     wp_die();
 }
 
-function spawning_check_image_request() {
-    if (get_option('spawning_kudurru_hooks_active') !== '1') {
-        return;  // Exit early if the hooks aren't active
+function spawning_modify_robots_txt($output, $public) {
+    if (get_option('spawning_block_ccbot') === 'on') {
+        $output .= "\nUser-agent: CCBot\nDisallow: /\n";
     }
-    if (get_query_var('image_redirect_request')) {
-        spawning_redirect_images_to_api();
+    if (get_option('spawning_block_gptbot') === 'on') {
+        $output .= "\nUser-agent: GPTBot\nDisallow: /\n";
+    }
+    return $output;
+}
+
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+function spawning_handle_spoofing_form() {
+    // Verify nonce
+    $nonce = isset($_POST['spoofing_nonce']) ? sanitize_key($_POST['spoofing_nonce']) : '';
+    if (!wp_verify_nonce($nonce, 'spawning_handle_spoofing_form_action')) {
+        echo json_encode(['message' => 'Nonce verification failed.', 'status' => 'error']);
+        wp_die();
+    }
+
+    $current_status = get_option('spawning_trick_chat_gpt_enabled', 'off');
+    $new_status = $current_status === 'on' ? 'off' : 'on';
+    update_option('spawning_trick_chat_gpt_enabled', $new_status);
+
+    echo json_encode(['status' => 'success', 'new_status' => $new_status]);
+    wp_die();
+}
+
+function spawning_trick_chatgpt() {
+    if (get_option('spawning_trick_chat_gpt_enabled', 'off') === 'off') {
+        return;
+    }
+
+    $user_agent = strtolower($_SERVER['HTTP_USER_AGENT']);  // Convert user agent to lowercase
+    
+    // Check for ChatGPT in the user agent and output custom text if found
+    if (stripos($user_agent, 'chatgpt') !== false || stripos($user_agent, 'gptbot') !== false) {
+        // Disable template rendering
+        define('WP_USE_THEMES', false);
+        
+        // Load the txt_options.php config file
+        $config_file_path = plugin_dir_path(__FILE__) . '../config/txt_options.php';
+        if (file_exists($config_file_path)) {
+            include_once $config_file_path;
+        }
+        
+        // Check if $txt_config is set and if 'gpt_cloak' key exists in the array
+        if (isset($txt_config) && array_key_exists('gpt_cloak', $txt_config)) {
+            // Use the value of 'gpt_cloak' key as custom text
+            $custom_text = $txt_config['gpt_cloak'];
+        } else {
+            // Handle error (e.g., log it, display a default message, etc.)
+            error_log('Error: Config file not found or gpt_cloak key not set in txt_options.php');
+            $custom_text = '<html>Error fetching custom text</html>';
+        }
+
+        // Output custom text
+        echo $custom_text;
+
+        // Stop further processing
+        exit;
     }
 }
 
+function spawning_handle_kudurru_form() {
+    // Verify nonce
+    $nonce = isset($_POST['kudurru_nonce']) ? sanitize_key($_POST['kudurru_nonce']) : '';
+    if (!wp_verify_nonce($nonce, 'spawning_handle_kudurru_form_action')) {
+        echo json_encode(['message' => 'Nonce verification failed.', 'status' => 'error']);
+        wp_die();
+    }
+
+    update_option('kudurru_full_node', isset($form_data['block_ccbot']) ? 'on' : 'off');
+
+    $current_status = get_option('spawning_kudurru_enabled', 'off');
+    $new_status = $current_status === 'on' ? 'off' : 'on';
+
+    // Retrieve and sanitize the API key
+    $api_key = isset($_POST['api_key']) ? sanitize_text_field($_POST['api_key']) : '';
+
+    update_option('spawning-kudurru-api-key', $api_key);
+
+    $rule = "\n# Begin Image Redirector with Blacklist\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule ^wp-content/(.*\.(jpg|jpeg|png|gif))$ /index.php?image_redirect_request=$1 [L]\n</IfModule>\n# End Image Redirector with Blacklist\n";
+    $htaccess_file = ABSPATH . '.htaccess';
+
+    if ($new_status === 'on') {
+        spawning_get_blacklisted_ips();
+
+        if (file_exists($htaccess_file) && is_writable($htaccess_file)) {
+            file_put_contents($htaccess_file, $rule);  // Remove FILE_APPEND flag to overwrite the file
+        }
+    }
+    else {
+        if (file_exists($htaccess_file) && is_writable($htaccess_file) && strpos(file_get_contents($htaccess_file), '# Begin Image Redirector with Blacklist')) {
+            $contents = file_get_contents($htaccess_file);
+            $contents = str_replace($rule, '', $contents);
+            file_put_contents($htaccess_file, $contents);
+        }
+    }
+
+    update_option('spawning_kudurru_enabled', $new_status);
+
+    echo json_encode(['status' => 'success', 'new_status' => $new_status]);
+    wp_die();
+}
+
+function spawning_check_image_request() {
+    if (get_option('spawning_kudurru_enabled') === 'on') {
+        if (preg_match('/.*\.(jpg|jpeg|png|gif)$/i', $_SERVER['REQUEST_URI'])) {
+            spawning_redirect_images_to_api();
+            exit; // Exit after handling image request
+        } else {
+            // If it's not an image request, continue with normal WordPress processing
+            return;
+        }
+    }
+    // If Kudurru is disabled, continue with normal WordPress processing
+    return;
+}
+
 function spawning_get_blacklisted_ips() {
+    // Retrieve the Bearer API key from the database
+    $bearer_api_key = get_option('spawning-kudurru-api-key', '');
+    if (!$bearer_api_key) {
+        error_log('No Bearer API key found in the database.');
+        return [];
+    }
+
     // Check if the blacklist is already cached
     $blacklisted_ips = get_transient('blacklisted_ips_cache');
 
     // If not, fetch and cache it
     if (false === $blacklisted_ips) {
-        $response = wp_remote_get('https://api-xb2cbucfja-uc.a.run.app/get_blocklist?data_id=15m', [
+        $response = wp_remote_get('https://api-xb2cbucfja-uc.a.run.app/get_blocklist', [
             'headers' => [
                 'accept' => 'application/json',
+                'Authorization' => 'Bearer ' . $bearer_api_key, // Use the Bearer token from the database
             ]
         ]);
 
@@ -177,12 +301,15 @@ function spawning_get_blacklisted_ips() {
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body, true);
 
-        $blacklisted_ips = array_map(function($item) {
-            return $item['ip_query'];
-        }, $data['blacklist_ips']);
+        // Directly use the blacklist_ips array from the response
+        $blacklisted_ips = $data['blacklist_ips'] ?? []; // Null coalescing operator for safety
 
         // Cache for 15 minutes
-        set_transient('blacklisted_ips_cache', $blacklisted_ips, 15 * MINUTE_IN_SECONDS);
+        set_transient('blacklisted_ips_cache', $blacklisted_ips, 60 * MINUTE_IN_SECONDS);
+
+        // Set the current timestamp as the last updated time
+        $current_timestamp = current_time('mysql'); // Get the current time in MySQL format
+        set_transient('blacklist_last_updated', $current_timestamp, 60 * MINUTE_IN_SECONDS);
     }
 
     return $blacklisted_ips;
@@ -196,6 +323,27 @@ function spawning_image_request_query_vars($vars) {
 function spawning_redirect_images_to_api() {
     if (preg_match('/.*\.(jpg|jpeg|png|gif)$/i', $_SERVER['REQUEST_URI'], $matches)) {
         $blacklisted_ips = spawning_get_blacklisted_ips();
+        $full_node_enabled = get_option('kudurru_full_node') === 'on';
+
+        if ($full_node_enabled) {
+
+            $request = [
+                'ip' => $_SERVER['REMOTE_ADDR'],
+                'image' => $_SERVER['REQUEST_URI'],
+                'timestamp' => current_time('mysql'),
+                'user_agent' => $_SERVER['HTTP_USER_AGENT'],
+                'referrer' => $_SERVER['HTTP_REFERER']
+            ];
+            $api_base_url = 'https://api-xb2cbucfja-uc.a.run.app/node_submission';
+            $domain_name = $_SERVER['SERVER_NAME'];
+            $message = "Incoming request from IP: {$request['ip']} for image: {$request['image']} at {$request['timestamp']}";
+            $api_url = $api_base_url . '?domain_name=' . urlencode($domain_name) . '&message=' . urlencode($message);
+            wp_remote_post($api_url, [
+                'headers' => [
+                    'accept' => 'application/json'
+                ]
+            ]);
+        }
 
         if (in_array($_SERVER['REMOTE_ADDR'], $blacklisted_ips)) {
             $blocked_requests = get_option('blocked_requests', []);
@@ -220,6 +368,8 @@ function spawning_redirect_images_to_api() {
                 ]
             ]);
 
+            // TODO: expose custom image uploads?
+
             $custom_image_data = get_option('custom_redirect_image_data');
             if ($custom_image_data) {
                 header("Content-Type: image/jpeg");
@@ -242,113 +392,50 @@ function spawning_redirect_images_to_api() {
             }
         }
     }
+
+    wp_die();
 }
 
-
-function spawning_handle_kudurru_form() {
+function spawning_handle_full_node_checkbox() {
     // Verify nonce
-    $nonce = isset($_POST['_wpnonce']) ? sanitize_key($_POST['_wpnonce']) : '';
-    if (!wp_verify_nonce($nonce, 'spawning_handle_kudurru_form_action')) {
+    $nonce = isset($_POST['fullNodeNonce']) ? sanitize_key($_POST['fullNodeNonce']) : '';
+    if (!wp_verify_nonce($nonce, 'kudurru_full_node_checkbox_action')) {
         echo json_encode(['message' => 'Nonce verification failed.', 'status' => 'error']);
         wp_die();
     }
 
-    $rule = "\n# Begin Image Redirector with Blacklist\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule ^wp-content/(.*\.(jpg|jpeg|png|gif))$ /index.php?image_redirect_request=$1 [L]\n</IfModule>\n# End Image Redirector with Blacklist\n";
-    $htaccess_file = ABSPATH . '.htaccess';
-    if (file_exists($htaccess_file) && is_writable($htaccess_file)) {
-        file_put_contents($htaccess_file, $rule);  // Remove FILE_APPEND flag to overwrite the file
-    }
+    // Check if 'full_node' checkbox was sent in the POST data
+    $full_node_state = isset($_POST['full_node']) ? sanitize_text_field($_POST['full_node']) : 'off';
 
-    update_option('spawning_kudurru_hooks_active', '1');
+    // Update the 'kudurru_full_node' option based on the checkbox state
+    update_option('kudurru_full_node', $full_node_state);
 
-    // Define a response message to be returned to the client
-    $response = ['message' => 'Rewrite rule has been updated successfully.'];
+    // Prepare response data
+    $response = [
+        'status' => 'success',
+        'message' => 'Full node state updated successfully',
+        'new_state' => $full_node_state
+    ];
 
     echo json_encode($response);
     wp_die();
 }
 
-function spawning_modify_robots_txt($output, $public) {
-    if (get_option('spawning_block_ccbot') === 'on') {
-        $output .= "\nUser-agent: CCBot\nDisallow: /\n";
-    }
-    if (get_option('spawning_block_gptbot') === 'on') {
-        $output .= "\nUser-agent: GPTBot\nDisallow: /\n";
-    }
-    return $output;
-}
-
-if (!defined('ABSPATH')) {
-    exit;
-}
-
-add_action('wp_ajax_handle_ai_form', 'spawning_ai_handle_ai_form');
-add_action('wp_ajax_handle_robots_form', 'spawning_handle_robots_form');
-add_action('wp_ajax_handle_kudurru_form', 'spawning_handle_kudurru_form');
-add_filter('robots_txt', 'spawning_modify_robots_txt', 10, 2);
-
-// This allows us to toggle the filtering hooks on and off
 function spawning_init_kudurru_hooks() {
-    if (get_option('spawning_kudurru_hooks_active') === '1') {
+    if (get_option('spawning_kudurru_enabled') === 'on') {
         add_filter('query_vars', 'spawning_image_request_query_vars');
         add_action('template_redirect', 'spawning_check_image_request');
         add_action('init', 'spawning_redirect_images_to_api');
-    }
-}
-add_action('init', 'spawning_init_kudurru_hooks');
-
-// Function to create a page on the admin panel
-function spawning_blacklisted_ips_page() {
-    add_menu_page(
-        'Blacklisted IPs',
-        'Blacklisted IPs',
-        'manage_options',
-        'spawning-blacklisted-ips',
-        'spawning_display_blacklisted_ips'
-    );
-}
-add_action('admin_menu', 'spawning_blacklisted_ips_page');
-
-// Function to display the blacklisted IPs on the created page
-function spawning_display_blacklisted_ips() {
-    $blacklisted_ips = spawning_get_blacklisted_ips();
-    echo '<div class="wrap">';
-    echo '<h1>Blacklisted IPs</h1>';
-    echo '<ul>';
-    foreach ($blacklisted_ips as $ip) {
-        echo '<li>' . esc_html($ip) . '</li>';
-    }
-    echo '</ul>';
-    echo '</div>';
-}
-
-function faketoid_request() {
-    $user_agent = strtolower($_SERVER['HTTP_USER_AGENT']);  // Convert user agent to lowercase
-    
-    // Check for ChatGPT in the user agent and output custom text if found
-    if (stripos($user_agent, 'chatgpt') !== false || stripos($user_agent, 'gptbot') !== false) {
-        // Disable template rendering
-        define('WP_USE_THEMES', false);
-
-        // Get text from specified URL
-        $response = wp_remote_get('https://kudurru.ai/data/faketoid.html');
-
-        // Check for errors in fetching the file
-        if (is_wp_error($response)) {
-            // Handle error (e.g., log it, display a default message, etc.)
-            error_log('Error fetching custom text from URL: ' . $response->get_error_message());
-            $custom_text = '<html>Error fetching custom text</html>';
-        } else {
-            $custom_text = wp_remote_retrieve_body($response);
-        }
-
-        // Output custom text
-        echo $custom_text;
-
-        // Stop further processing
         exit;
     }
 }
-add_action('template_redirect', 'faketoid_request');
+// add_action('init', 'spawning_init_kudurru_hooks');
+add_action('template_redirect', 'spawning_trick_chatgpt');
+add_action('wp_ajax_handle_ai_form', 'spawning_ai_handle_ai_form');
+add_action('wp_ajax_handle_robots_form', 'spawning_handle_robots_form');
+add_action('wp_ajax_handle_spoofing_form', 'spawning_handle_spoofing_form');
+add_action('wp_ajax_handle_kudurru_form', 'spawning_handle_kudurru_form');
+add_action('wp_ajax_handle_full_node_checkbox', 'spawning_handle_full_node_checkbox');
+add_filter('robots_txt', 'spawning_modify_robots_txt', 10, 2);
 
 ?>

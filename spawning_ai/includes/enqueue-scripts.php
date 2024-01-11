@@ -21,13 +21,18 @@
  * @return void
  */
 
-function spawning_ai_enqueue_scripts() {
-    // Assuming your plugin directory is spawning-ai
+ function spawning_ai_enqueue_scripts() {
     wp_enqueue_script('jquery');
     wp_enqueue_script('jquery-ui-tooltip');
-    wp_enqueue_script('spawning-ai-script', plugins_url('../js/scripts.js', __FILE__), array(), '1.0.0', true);
-    wp_enqueue_script('chartjs', 'https://cdn.jsdelivr.net/npm/chart.js');
-    wp_enqueue_script('chartjs-adapter', 'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns');
+    wp_enqueue_script('thickbox');
+
+    // Path to the script file relative to the WordPress root directory
+    $script_file = plugin_dir_path(__FILE__) . '../js/scripts.js';
+
+    // Use file modification time for cache busting
+    $script_version = file_exists($script_file) ? filemtime($script_file) : '1.0.0';
+
+    wp_enqueue_script('spawning-ai-script', plugins_url('../js/scripts.js', __FILE__), array('jquery'), $script_version, true);
 }
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 

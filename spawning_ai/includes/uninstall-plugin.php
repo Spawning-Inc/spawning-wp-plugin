@@ -20,7 +20,7 @@
  * Uninstall function for the Spawning AI plugin.
  *
  * This function is typically triggered when the plugin is deactivated and deleted.
- * It removes the ai.txt file, modifies the robots.txt file, and removes other data created by the plugin.
+ * It removes the ai.txt file from the server's root directory.
  */
 function spawning_ai_uninstall()
 {
@@ -42,6 +42,7 @@ function spawning_ai_uninstall()
         // Remove the block_ccbot and block_gptbot options
         delete_option('spawning_block_ccbot');
         delete_option('spawning_block_gptbot');
+        
 
         // Get the contents of the robots.txt file.
         $robots_content = file_get_contents($robots_file_path);
@@ -57,6 +58,8 @@ function spawning_ai_uninstall()
         file_put_contents($robots_file_path, $robots_content);
     }
 
+    delete_option('spawning_trick_chat_gpt_enabled');
+
     $rule = "\n# Begin Image Redirector with Blacklist\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule ^wp-content/(.*\.(jpg|jpeg|png|gif))$ /index.php?image_redirect_request=$1 [L]\n</IfModule>\n# End Image Redirector with Blacklist\n";
     $htaccess_file = ABSPATH . '.htaccess';
     if (file_exists($htaccess_file) && is_writable($htaccess_file) && strpos(file_get_contents($htaccess_file), '# Begin Image Redirector with Blacklist')) {
@@ -64,20 +67,21 @@ function spawning_ai_uninstall()
         $contents = str_replace($rule, '', $contents);
         file_put_contents($htaccess_file, $contents);
     }
+ 
+    update_option('spawning_kudurru_enabled', 'off');
 
-    update_option('spawning_kudurru_hooks_active', '0');
-
+    delete_option('spawning_kudurru_enabled');
+    delete_option('spawning-kudurru-api-key');
+    delete_option('kudurru_full_node');
+ 
     // Delete blacklisted_ips_cache transient
     delete_transient('blacklisted_ips_cache');
-
+    delete_transient('blacklist_last_updated');
+ 
     // Delete blocked_requests option
     delete_option('blocked_requests');
-
+ 
     // Remove custom_redirect_image_data option
     delete_option('custom_redirect_image_data');
 
-    // Remove spawning_kudurru_hooks_active option
-    delete_option('spawning_kudurru_hooks_active');
 }
-
-?>

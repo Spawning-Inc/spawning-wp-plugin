@@ -149,42 +149,69 @@ var UIManager = {
     })(jQuery);
   },
 
-  handleKudurruFormSubmission: function () {
-    // IIFE with jQuery as the argument
+  handleSpoofingFormSubmission: function () {
     (function ($) {
-      // Bind an event handler to the 'submit' event of the form with the ID 'robotsForm'
-      $("#kudurruForm").on("submit", function (e) {
-        // Prevent the default form submission
-        e.preventDefault();
+      const spoofingButton = document.getElementById("toggle-spoofing");
 
-        // AJAX request to submit the form data
-        $.ajax({
-          type: "POST",
+      spoofingButton.addEventListener("click", function () {
+        jQuery.ajax({
           url: ajaxurl,
+          method: "POST",
           data: {
-            action: "handle_kudurru_form", // This action should correspond to a PHP hook on the server side
-            form: $(this).serialize(),
-            _wpnonce: $("#kudurru_nonce").val(), // Use the ID "robots_nonce"
+            action: "handle_spoofing_form",
+            spoofing_nonce: $("#spoofing_nonce").val(),
           },
           success: function (response) {
-            // Handle the successful response here
-            if (response.status === "error") {
-              console.error(response.message);
-            } else {
-              $("#notification")
-                .text("Kudurru Activated!")
-                .css("opacity", "1")
-                .delay(3000)
-                .animate({ opacity: 0 }, 500);
-            }
+            // Parse the response string to a JSON object
+            const parsedResponse = JSON.parse(response);
+            // Update the button text
+            spoofingButton.textContent =
+              parsedResponse.new_status === "on"
+                ? "Disable Spoofing"
+                : "Enable Spoofing";
+
+            $("#notification")
+              .text("Spoofing updated successfully!")
+              .css("opacity", "1")
+              .delay(3000)
+              .animate({ opacity: 0 }, 500);
           },
-          error: function (jqXHR, textStatus, errorThrown) {
-            console.error(
-              "AJAX Error:",
-              textStatus,
-              errorThrown,
-              jqXHR.responseText
-            );
+        });
+      });
+    })(jQuery);
+  },
+
+  handleKudurruFormSubmission: function () {
+    (function ($) {
+      const kudurruButton = document.getElementById("toggle-kudurru");
+
+      kudurruButton.addEventListener("click", function () {
+        jQuery.ajax({
+          url: ajaxurl,
+          method: "POST",
+          data: {
+            action: "handle_kudurru_form",
+            kudurru_nonce: $("#kudurru_nonce").val(),
+            api_key: $("#spawning-kudurru-api-key").val(),
+          },
+          success: function (response) {
+            jQuery("#refreshing-page").css("display", "block");
+
+            // Parse the response string to a JSON object
+            const parsedResponse = JSON.parse(response);
+            // Update the button text
+            kudurruButton.textContent =
+              parsedResponse.new_status === "on"
+                ? "Disable Kudurru"
+                : "Enable Kudurru";
+
+            $("#notification")
+              .text("Kudurru updated successfully!")
+              .css("opacity", "1")
+              .delay(3000)
+              .animate({ opacity: 0 }, 500);
+
+            location.reload();
           },
         });
       });
@@ -250,5 +277,55 @@ var UIManager = {
         });
       });
     })(jQuery);
+  },
+  validateApiKey: function () {
+    var validateButton = document.getElementById("validate-api-key-button");
+    var resultElement = document.getElementById("api-key-validation-result");
+
+    validateButton.addEventListener("click", function () {
+      var apiKey = document.getElementById("spawning-kudurru-api-key").value;
+
+      fetch("https://api-xb2cbucfja-uc.a.run.app/validate_access", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer " + apiKey,
+        },
+      })
+        .then((response) => {
+          if (response.status === 200) {
+            resultElement.textContent = "API key is valid";
+            jQuery("#api-key-validation-result").css("display", "block");
+            jQuery("#toggle-kudurru").css("display", "block");
+          } else {
+            resultElement.textContent =
+              "Unfortunately that key doesn't seem to be working.";
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          resultElement.textContent = "Error occurred";
+        });
+    });
+  },
+  fetchAndDisplayKudurruBlocks: function () {
+    fetch(
+      "https://api-xb2cbucfja-uc.a.run.app/get_intercepted_messages_total",
+      {
+        method: "GET",
+        headers: {
+          accept: "application/json",
+        },
+      }
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        if (data && data.message_count) {
+          document.getElementById("kudurru-blocks-count").innerHTML =
+            "<p>Total blocked to date: " + data.message_count + "</p>";
+        } else {
+          console.error("Data not found in response");
+        }
+      })
+      .catch((error) => console.error("Error fetching Kudurru blocks:", error));
   },
 };
