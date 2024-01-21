@@ -22,15 +22,35 @@
  * @return void
  */
 function spawning_ai_enqueue_styles() {
-    // This function uses WordPress's wp_enqueue_style to include a CSS file located in the plugin's css directory.
-    // The plugins_url function is used to create a URL for the css file based on the location of the current file (__FILE__).
-    wp_enqueue_style(
-        "spawning-ai-style", // Handle for the stylesheet. Should be unique as it is used to identify the script in the whole system.
-        plugins_url("../css/main.css", __FILE__) // Path to the CSS file. plugins_url function is used to get the correct URL regardless of where the WordPress is installed.
-    );
-    wp_enqueue_style('jquery-ui-css', plugins_url("../css/smoothness-jquery-ui.css", __FILE__));  // You might want to host this CSS yourself or choose a different theme.
-    wp_enqueue_style('thickbox');
+    $main_css_path = "../css/main.css";
+    $jquery_ui_css_path = "../css/smoothness-jquery-ui.css";
 
+    // Fetch the file system path for main.css and smoothness-jquery-ui.css
+    $main_css_file_path = plugin_dir_path( __FILE__ ) . $main_css_path;
+    $jquery_ui_css_file_path = plugin_dir_path( __FILE__ ) . $jquery_ui_css_path;
+
+    // Get the last modified time of the files
+    $main_css_version = file_exists($main_css_file_path) ? filemtime($main_css_file_path) : false;
+    $jquery_ui_css_version = file_exists($jquery_ui_css_file_path) ? filemtime($jquery_ui_css_file_path) : false;
+
+    // Enqueue the main stylesheet with cache busting
+    wp_enqueue_style(
+        "spawning-ai-style",
+        plugins_url($main_css_path, __FILE__),
+        array(), // Dependencies
+        $main_css_version // Version number for cache busting
+    );
+
+    // Enqueue the jQuery UI stylesheet with cache busting
+    wp_enqueue_style(
+        'jquery-ui-css',
+        plugins_url($jquery_ui_css_path, __FILE__),
+        array(),
+        $jquery_ui_css_version
+    );
+
+    // Enqueue the Thickbox stylesheet
+    wp_enqueue_style('thickbox');
 }
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 

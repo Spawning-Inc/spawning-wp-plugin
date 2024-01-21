@@ -230,22 +230,25 @@ function spawning_handle_kudurru_form() {
 
     // Retrieve and sanitize the API key
     $api_key = isset($_POST['api_key']) ? sanitize_text_field($_POST['api_key']) : '';
-    if (!$api_key) {
-        $json_file = plugin_dir_path(dirname(__FILE__)) . "config/ai_txt_options.json";
-        $options = json_decode(sanitize_textarea_field(file_get_contents($json_file)), true);
-        update_option('spawning-kudurru-api-key', $options['default_api_key']);
-    }
-    else {
-        update_option('spawning-kudurru-api-key', $api_key);
 
-    }
-
-    // Update the API key in the database
+    update_option('spawning-kudurru-api-key', $api_key);
 
     $rule = "\n# Begin Image Redirector with Blacklist\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule ^wp-content/(.*\.(jpg|jpeg|png|gif))$ /index.php?image_redirect_request=$1 [L]\n</IfModule>\n# End Image Redirector with Blacklist\n";
     $htaccess_file = ABSPATH . '.htaccess';
-    if (file_exists($htaccess_file) && is_writable($htaccess_file)) {
-        file_put_contents($htaccess_file, $rule);  // Remove FILE_APPEND flag to overwrite the file
+
+    if ($new_status === 'on') {
+        spawning_get_blacklisted_ips();
+
+        if (file_exists($htaccess_file) && is_writable($htaccess_file)) {
+            file_put_contents($htaccess_file, $rule);  // Remove FILE_APPEND flag to overwrite the file
+        }
+    }
+    else {
+        if (file_exists($htaccess_file) && is_writable($htaccess_file) && strpos(file_get_contents($htaccess_file), '# Begin Image Redirector with Blacklist')) {
+            $contents = file_get_contents($htaccess_file);
+            $contents = str_replace($rule, '', $contents);
+            file_put_contents($htaccess_file, $contents);
+        }
     }
 
     update_option('spawning_kudurru_enabled', $new_status);
@@ -338,6 +341,8 @@ function spawning_redirect_images_to_api() {
                     'accept' => 'application/json'
                 ]
             ]);
+
+            // TODO: expose custom image uploads?
 
             $custom_image_data = get_option('custom_redirect_image_data');
             if ($custom_image_data) {

@@ -195,6 +195,9 @@ var UIManager = {
             api_key: $("#spawning-kudurru-api-key").val(),
           },
           success: function (response) {
+
+            jQuery('#refreshing-page').css('display', 'block');
+
             // Parse the response string to a JSON object
             const parsedResponse = JSON.parse(response);
             // Update the button text
@@ -208,6 +211,8 @@ var UIManager = {
               .css("opacity", "1")
               .delay(3000)
               .animate({ opacity: 0 }, 500);
+
+            location.reload();
           },
         });
       });
@@ -278,6 +283,8 @@ var UIManager = {
     var validateButton = document.getElementById("validate-api-key-button");
     var resultElement = document.getElementById("api-key-validation-result");
 
+
+
     validateButton.addEventListener("click", function () {
       var apiKey = document.getElementById("spawning-kudurru-api-key").value;
 
@@ -290,6 +297,9 @@ var UIManager = {
         .then((response) => {
           if (response.status === 200) {
             resultElement.textContent = "API key is valid";
+            jQuery('#api-key-validation-result').css('display', 'block');
+            jQuery('#toggle-kudurru').css('display', 'block');
+
           } else {
             resultElement.textContent =
               "Unfortunately that key doesn't seem to be working.";
@@ -314,8 +324,8 @@ var UIManager = {
       .then((response) => response.json())
       .then((data) => {
         if (data && data.message_count) {
-          document.getElementById("kudurru-blocks-count").textContent =
-            "Total Kudurru Blocks: " + data.message_count;
+          document.getElementById("kudurru-blocks-count").innerHTML =
+            "<p>Total blocked to date: " + data.message_count + "</p>";
         } else {
           console.error("Data not found in response");
         }

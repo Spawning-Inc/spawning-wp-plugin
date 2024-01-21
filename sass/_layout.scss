@@ -99,7 +99,7 @@
     padding-top: 16px;
     padding-bottom: 16px;
 
-    > .checkbox-option {
+    >.checkbox-option {
       padding-top: 8px;
       padding-bottom: 8px;
     }
@@ -124,14 +124,54 @@
 .spawning-grid-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px; /* Adjust the gap between items as needed */
+  gap: 10px;
+  /* Adjust the gap between items as needed */
 }
 
 .spawning-grid-item {
-  flex: 1 1 200px; /* Adjust the basis to control the minimum width of each item */
-  border: 1px solid #ddd; /* Optional border for visual separation */
+  flex: 1 1 200px;
+  /* Adjust the basis to control the minimum width of each item */
+  border: 1px solid #ddd;
+  /* Optional border for visual separation */
   padding: 10px;
-  text-align: center; /* Center the text within each grid item */
-  background-color: #f9f9f9; /* Optional background color */
-  border-radius: 4px; /* Optional rounded corners */
+  text-align: center;
+  /* Center the text within each grid item */
+  background-color: #f9f9f9;
+  /* Optional background color */
+  border-radius: 4px;
+  /* Optional rounded corners */
+}
+
+#kudurru-blocks-count {
+  float: right;
+  position: absolute;
+  right: 125px;
+  top: 20px;
+}
+
+.intercepted-messages {
+  float: right;
+  position: absolute;
+  right: 125px;
+  top: 40px;
+}
+
+.button-container .button {
+  max-width: fit-content;
+  padding: 4px !important;
+}
+
+.embedded-image-wrapper {
+  float: right;
+  position: absolute;
+  max-width: 100px;
+  max-height: 100px;
+  right: 0px;
+  top: 0px;
+}
+
+
+.titleLink {
+  color: black;
+  text-decoration: none;
 }

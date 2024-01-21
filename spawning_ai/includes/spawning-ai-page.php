@@ -152,22 +152,28 @@ echo sprintf(esc_html__('View your %s', 'spawning-ai'), "ai.txt");
                 <div class="section card">
                 <form method="post" id="kudurruForm">
                     <?php wp_nonce_field('spawning_handle_kudurru_form_action', 'kudurru_nonce'); ?>
-                    <p>
-                        <?php echo esc_html__("Use the button below to toggle Kudurru.", "spawning-ai"); ?>
-                    </p>
                     <div class="selections">
-                        <button type="button" id="toggle-kudurru" class="buttonSecondary">
-                            <?php echo get_option('spawning_kudurru_enabled') === 'on' ? 'Disable Kudurru' : 'Enable Kudurru'; ?>
-                        </button>
-                        <div id="kudurru-blocks-count"></div>
-                        <?php if (get_option('spawning_kudurru_enabled') === 'on') : ?>
+                    <h2><span>𒋧Kudurru </span><a class="titleLink" target="_blank" href="https://kudurru.ai">↗</a></h2> 
+                        <span id="kudurru-blocks-count" class="blocks-count"></span>
 
-                            <div class="api-key-input">
+
+                        <div class="button-container">
+
+                        <a href="#TB_inline?width=600&height=200&inlineId=configureModal" class="thickbox button buttonSecondary" id="viewConfigureModal">Settings</a>
+                        <div id="configureModal" style="display: none;">
+                        <div class="api-key-input">
                                 <label for="spawning-kudurru-api-key">Api-Key</label>
                                 <input type="text" id="spawning-kudurru-api-key" name="spawning-kudurru-api-key" value="<?php echo get_option('spawning-kudurru-api-key'); ?>"/>
                                 <button type="button" id="validate-api-key-button">Validate API Key</button>
                                 <p id="api-key-validation-result"></p> <!-- Placeholder for the result message -->
-                            </div>
+                                <button type="button" id="toggle-kudurru" style="display: none;" class="buttonSecondary">
+                                    <?php echo get_option('spawning_kudurru_enabled') === 'on' ? 'Disable Kudurru' : 'Enable Kudurru'; ?>
+                                </button>
+                                <div id="refreshing-page" style="display: none;"> Please Wait for updates to take effect...</div>
+                        </div>
+                        </div>
+
+                        <?php if (get_option('spawning_kudurru_enabled') === 'on') : ?>
 
                             <?php 
                                 // Get the API key from the options
@@ -185,15 +191,15 @@ echo sprintf(esc_html__('View your %s', 'spawning-ai'), "ai.txt");
                                     ]);
 
                                     if (is_wp_error($response)) {
-                                        echo '<p>Failed to fetch intercepted messages count.</p>';
+                                        echo '<p class="intercepted-messages">No intercepted messages found.</p>';
                                     } else {
                                         $body = wp_remote_retrieve_body($response);
                                         $data = json_decode($body, true);
 
                                         if (isset($data['message_count'])) {
-                                            echo '<p>Total Intercepted Messages: ' . esc_html($data['message_count']) . '</p>';
+                                            echo '<p class="intercepted-messages">Total Intercepted Messages: ' . esc_html($data['message_count']) . '</p>';
                                         } else {
-                                            echo '<p>No intercepted messages found.</p>';
+                                            echo '<p class="intercepted-messages">No intercepted messages found.</p>';
                                         }
                                     }
                                 } else {
@@ -201,20 +207,24 @@ echo sprintf(esc_html__('View your %s', 'spawning-ai'), "ai.txt");
                                 }
                                 $current_server = $_SERVER['HTTP_HOST'];
                                 $image_url = "http://34.132.90.61/proxy?url=https://{$current_server}/wp-content/test.jpg";
-
+                            
+                                // Fetching image content using file_get_contents
+                                $image_data = file_get_contents($image_url);
+                            
+                                // Encoding image content to base64
+                                $base64 = base64_encode($image_data);
+                            
+                                // Embedding the image using data URL
                                 echo '<div class="embedded-image-wrapper">';
-                                echo '<a href="' . $image_url . '" target="_blank" rel="noopener noreferrer">';
-                                echo 'Test poison image';
-                                echo '</a>';
+                                echo '<img width="100px" height="100px" src="data:image/jpeg;base64,' . $base64 . '" alt="Test Image" />';
                                 echo '</div>';
                             ?>
-
                             <!-- Button to open modal -->
-                            <a href="#TB_inline?width=600&height=550&inlineId=blacklistModal" class="thickbox button" id="viewBlacklistButton">View Blocklisted IPs</a>
+                            <a href="#TB_inline?width=600&height=550&inlineId=blacklistModal" class="thickbox button buttonSecondary" id="viewBlacklistButton">View Blocklist</a>
 
                             <!-- Modal for displaying blacklisted IPs -->
                             <div id="blacklistModal" style="display: none;">
-                                <h3>Blacklisted IP Addresses</h3>
+                                <h3>Blocklisted IP Addresses</h3>
                                 <?php
                                 $last_updated = get_transient('blacklist_last_updated');
                                 if ($last_updated) {
@@ -227,19 +237,23 @@ echo sprintf(esc_html__('View your %s', 'spawning-ai'), "ai.txt");
                                     echo '<p>Last update time not available.</p>';
                                 }
                             ?>
-                            <div id="blacklistContent" class="spawning-grid-container">
-                                <?php
-                                $blacklisted_ips = spawning_get_blacklisted_ips();
-                                if (!empty($blacklisted_ips)) {
-                                    foreach ($blacklisted_ips as $ip) {
-                                        echo '<div class="spawning-grid-item"><a href="https://ipinfo.io/' . esc_attr($ip) . '" target="_blank">' . esc_html($ip) . '</a></div>';
+                                <div id="blacklistContent" class="spawning-grid-container">
+                                    <?php
+                                    $blacklisted_ips = spawning_get_blacklisted_ips();
+                                    if (!empty($blacklisted_ips)) {
+                                        foreach ($blacklisted_ips as $ip) {
+                                            echo '<div class="spawning-grid-item"><a href="https://ipinfo.io/' . esc_attr($ip) . '" target="_blank">' . esc_html($ip) . '</a></div>';
+                                        }
+                                    } else {
+                                        echo '<p>No blocklisted IPs found.</p>';
                                     }
-                                } else {
-                                    echo '<p>No blacklisted IPs found.</p>';
-                                }
-                                ?>
+                                    ?>
+                        </div>
+
                             </div>
                         <?php endif; ?>
+                        </div>
+
                     </div>
                 </form>
 
