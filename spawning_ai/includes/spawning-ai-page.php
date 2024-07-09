@@ -198,10 +198,10 @@ echo sprintf(esc_html__('View your %s', 'spawning-ai'), "ai.txt");
                     <a class="ccLink" href="https://spawning.ai" target="_blank" rel="noreferrer">
                         <?php echo esc_html(__("About Us", "spawning-ai")); ?>
                     </a>
-                    <a class="ccLink" href="https://site.spawning.ai/contact?ctx=wp" target="_blank" rel="noreferrer">
+                    <a class="ccLink" href="mailto:info@spawning.ai" target="_blank" rel="noreferrer">
                         <?php echo esc_html(__("Help", "spawning-ai")); ?>
                     </a>
-                </p>
+                </p> 
             </div>
         </div>
     </div>
